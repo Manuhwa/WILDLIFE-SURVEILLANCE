@@ -1,10 +1,36 @@
-# Hearthline Knowledge Steward
+# Wildlife Surveillance
 
-A **prototype** for community-governed indigenous knowledge — not a scrapeable chatbot.
+Two browser prototypes for Mashonaland Central site work: a live wildlife camera desk, and a community-governed knowledge archive.
 
-All seed records belong to a **fictional demonstration community**. They exist to show access tiers, protocol tags, and model refusal. They are not the knowledge of any real people.
+## Wildlife camera dashboard
 
-## What it demonstrates
+Live (and simulated) park cameras, object confirmation, and Pangala scene questions. False-positive filters drop ceiling discs labelled as frisbees, colour-guessed “water”, and animals that do not hold across frames.
+
+**Run**
+
+Double-click `start-wildlife.bat`, or from this folder:
+
+```bash
+py -3 -m http.server 8765
+```
+
+Then open http://localhost:8765/wildlife-dashboard/
+
+Use **Use device camera** for a real feed. Chrome needs `http://localhost` (not `file://`) for the camera.
+
+## Hearthline knowledge steward
+
+A CARE-aligned archive for indigenous knowledge. All seed records are **fictional**. Ask is extractive: closed knowledge and “not for the model” records are never quoted.
+
+**Run**
+
+Double-click `start.bat`, or:
+
+```bash
+python -m http.server 5173
+```
+
+Then open http://localhost:5173
 
 | Principle | In the prototype |
 | --- | --- |
@@ -13,27 +39,4 @@ All seed records belong to a **fictional demonstration community**. They exist t
 | **Responsibility** | Audit log of role changes, questions, publish/withdraw |
 | **Ethics** | Closed knowledge is a pointer; Ask will not generate it |
 
-Ask is **extractive**. It quotes allowed records. It does not invent. Records tagged *not for the model*, and all **closed** records, never enter Ask — even when an elder can open them in the library.
-
-## Run
-
-From this folder:
-
-```bash
-python -m http.server 5173
-```
-
-Then open http://localhost:5173
-
-You can also open `index.html` directly in a browser.
-
-## Try this
-
-1. Stay as **Visitor**. Ask: *How do you prepare fever-leaf medicine?*
-2. Switch to **Community member**. Ask about ice at the bend.
-3. Open **Library** as a visitor, then as an elder — watch held cards become readable.
-4. As a member, **Contribute** an offer (consent boxes required). As a keeper, **Publish** it.
-
-## Not in this prototype
-
-Identity proof, encryption at rest, official [Local Contexts](https://localcontexts.org/) TK Labels, or a hosted LLM. Those belong in a community-owned deployment after free, prior, and informed consent.
+**Try this:** stay as Visitor and ask how to prepare fever-leaf; switch to Community member and ask about ice at the bend; as Elder, open the midwinter cycle in the library, then ask the archive to write it down — it should refuse.
