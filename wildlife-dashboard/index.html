@@ -87,6 +87,20 @@
     .ws-chip-mining { background: #3a2208; color: #fbbf24; }
     .ws-chip-weapon { background: #3d1414; color: #ff8a8a; }
     .ws-chip-tourist { background: #122a3d; color: #7dd3fc; }
+    .ws-chip-livestock { background: #3a2a08; color: #fbbf24; }
+    .ws-chip-predator { background: #2a163d; color: #d8b4fe; }
+    .ws-chip-crop { background: #3d2208; color: #fdba74; }
+    .ws-chip-fence { background: #3d1414; color: #ff8a8a; }
+    .ws-purpose { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; padding: 0.18rem 0.5rem; border-radius: 999px; margin-right: 0.3rem; }
+    .ws-purpose-both { background: #122a3d; color: #7dd3fc; }
+    .ws-purpose-park { background: #123524; color: #3dd68c; }
+    .ws-purpose-farm { background: #3a2a12; color: #f5a524; }
+    .ws-ag-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+    .ws-meter { height: 8px; background: #243040; border-radius: 999px; overflow: hidden; margin-top: 0.4rem; }
+    .ws-meter span { display: block; height: 100%; background: #3dd68c; }
+    .ws-meter.warn span { background: #f5a524; }
+    .ws-meter.crit span { background: #ff5a5a; }
+    .ws-ag-actions { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.75rem; }
     .ws-face-grid { width: 44px; height: 44px; border-radius: 8px; background: repeating-linear-gradient(90deg, #0d3d2a 0 2px, transparent 2px 6px), repeating-linear-gradient(0deg, #0d3d2a 0 2px, #163d4a 2px 6px); border: 1px solid #3dd68c; flex-shrink: 0; object-fit: cover; }
     .ws-booth { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1.25rem; align-items: start; }
     .ws-video-wrap { position: relative; background: #000; border-radius: 12px; overflow: hidden; border: 0.5px solid var(--border); aspect-ratio: 4/3; }
@@ -164,6 +178,7 @@
       .ws-staff-item { flex-direction: column; align-items: flex-start; }
       .ws-tour-form { grid-template-columns: 1fr !important; }
       .ws-booth { grid-template-columns: 1fr; }
+      .ws-ag-split { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -172,7 +187,7 @@
     <div class="ws-container" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
       <div>
         <h1>Wildlife Surveillance System — Mashonaland Central</h1>
-        <div class="ws-header-sub">Mashonaland Central · Umfurudzi · Bally Vaughan · Mavuradona · Pangala AI</div>
+        <div class="ws-header-sub">Conservation + communal farms · Umfurudzi · Bally Vaughan · Mavuradona · livestock IoT · Pangala AI</div>
       </div>
       <div style="display: flex; align-items: center; gap: 0.75rem;">
         <div id="clock" style="font-size: 13px; color: var(--text-secondary); font-variant-numeric: tabular-nums;"></div>
@@ -205,6 +220,7 @@
       <button class="ws-tab" data-tab="alerts">Alerts</button>
       <button class="ws-tab" data-tab="cameras">Cameras</button>
       <button class="ws-tab" data-tab="tracking">GPS Tracking</button>
+      <button class="ws-tab" data-tab="smartag">Smart Ag</button>
       <button class="ws-tab" data-tab="staff">Staff</button>
       <button class="ws-tab" data-tab="tourists">Tourists</button>
       <button class="ws-tab" data-tab="incidents">Incidents</button>
@@ -216,7 +232,7 @@
         <div class="ws-card">
           <div class="ws-card-label">Active Alerts</div>
           <div class="ws-card-stat" id="statAlerts" style="color: var(--text-danger);">0</div>
-          <div class="ws-card-label">Poachers · weapons · mining · fire</div>
+          <div class="ws-card-label">Poachers · fire · livestock · HWC</div>
         </div>
         <div class="ws-card">
           <div class="ws-card-label">Cameras Powered</div>
@@ -226,12 +242,22 @@
         <div class="ws-card">
           <div class="ws-card-label">GPS Units Tracking</div>
           <div class="ws-card-stat" id="statGps" style="color: var(--text-accent);">8</div>
-          <div class="ws-card-label">Rangers + camera beacons</div>
+          <div class="ws-card-label">Rangers · cameras · livestock collars</div>
         </div>
         <div class="ws-card">
           <div class="ws-card-label">Tourists in park</div>
           <div class="ws-card-stat" id="statTourists" style="color: #7dd3fc;">0</div>
           <div class="ws-card-label">Face-registered · not treated as threats</div>
+        </div>
+        <div class="ws-card">
+          <div class="ws-card-label">Livestock near parks</div>
+          <div class="ws-card-stat" id="statLivestock" style="color: #fbbf24;">0</div>
+          <div class="ws-card-label">Collars in buffer or inside a reserve</div>
+        </div>
+        <div class="ws-card">
+          <div class="ws-card-label">IoT sensors online</div>
+          <div class="ws-card-stat" id="statIot" style="color: #d8b4fe;">0/0</div>
+          <div class="ws-card-label">Fence · soil · trough · kraal · crop</div>
         </div>
       </div>
 
@@ -243,9 +269,10 @@
         <div class="ws-map-legend">
           <span><i class="ws-dot" style="background:#ff5a5a"></i> Weapon / poacher</span>
           <span><i class="ws-dot" style="background:#f5a524"></i> Fire</span>
-          <span><i class="ws-dot" style="background:#fbbf24"></i> Illegal mining</span>
+          <span><i class="ws-dot" style="background:#fbbf24"></i> Livestock collar</span>
+          <span><i class="ws-dot" style="background:#c084fc"></i> IoT sensor</span>
           <span><i class="ws-dot" style="background:#eab308"></i> Unauthorised</span>
-          <span><i class="ws-dot" style="background:#3dd68c"></i> Camera / ranger</span>
+          <span><i class="ws-dot" style="background:#3dd68c"></i> Camera / park</span>
         </div>
       </div>
 
@@ -264,17 +291,25 @@
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 13px;"><span>Wildfire / smoke</span><span style="font-weight: 600; color: var(--text-warning);">2 events</span></div>
             <div class="ws-heatbar"><div class="ws-heatbar-fill" style="width: 72%;"></div></div>
           </div>
-          <div>
+          <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 13px;"><span>Unauthorised activity</span><span style="font-weight: 600; color: var(--text-accent);">3 events</span></div>
             <div class="ws-heatbar"><div class="ws-heatbar-fill" style="width: 55%;"></div></div>
+          </div>
+          <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 13px;"><span>Livestock in park / buffer</span><span style="font-weight: 600; color: #fbbf24;">1 event</span></div>
+            <div class="ws-heatbar"><div class="ws-heatbar-fill" style="width: 38%;"></div></div>
+          </div>
+          <div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 13px;"><span>Crop raid / kraal predator</span><span style="font-weight: 600; color: #d8b4fe;">2 events</span></div>
+            <div class="ws-heatbar"><div class="ws-heatbar-fill" style="width: 44%;"></div></div>
           </div>
         </div>
         <div class="ws-card">
           <div class="ws-title">Pangala model accuracy</div>
           <div class="ws-system-row"><span>Gun / rifle detection</span><span class="ws-status-badge">96.8%</span></div>
           <div class="ws-system-row"><span>Knife / axe / blunt weapon</span><span class="ws-status-badge">93.4%</span></div>
-          <div class="ws-system-row"><span>Illegal mining activity</span><span class="ws-status-badge">95.1%</span></div>
-          <div class="ws-system-row"><span>Tourist face enrolment</span><span class="ws-status-badge">99.0%</span></div>
+          <div class="ws-system-row"><span>Livestock collar / park boundary</span><span class="ws-status-badge">97.2%</span></div>
+          <div class="ws-system-row"><span>Fence IoT + crop geophone</span><span class="ws-status-badge">94.6%</span></div>
         </div>
       </div>
     </div>
@@ -303,12 +338,70 @@
         <div class="ws-map-legend">
           <span><i class="ws-dot" style="background:#5ee0a0"></i> Camera beacon</span>
           <span><i class="ws-dot" style="background:#60a5fa"></i> Ranger GPS</span>
+          <span><i class="ws-dot" style="background:#fbbf24"></i> Livestock collar</span>
+          <span><i class="ws-dot" style="background:#c084fc"></i> IoT node</span>
           <span><i class="ws-dot" style="background:#ff5a5a"></i> Active threat</span>
         </div>
       </div>
       <div class="ws-card">
         <div class="ws-title">Live coordinate table</div>
         <div id="gpsTable"></div>
+      </div>
+    </div>
+
+    <div id="smartag" class="ws-tab-content ws-hidden">
+      <div class="ws-card" style="margin-bottom: 1.5rem;">
+        <div class="ws-title">Dual-purpose desk · parks and communal farms</div>
+        <p style="font-size: 13px; color: var(--text-secondary); margin: -0.5rem 0 0.85rem; line-height: 1.55;">The same collar, fence, and sensor network protects wildlife <em>and</em> neighbouring farmers. Livestock that drift into Umfurudzi, Bally Vaughan or Mavuradona are a conservation problem (overgrazing, disease, snares) and a farm problem (impoundment, herd loss). Predators at a kraal or elephants in maize are a farm problem first — and a conservation problem if people retaliate.</p>
+        <div class="ws-ag-split">
+          <div>
+            <span class="ws-purpose ws-purpose-park">CONSERVATION</span>
+            <div style="font-size:13px;margin-top:0.55rem;line-height:1.5;">Keep cattle out of the reserve. Treat a dead fence as a possible poacher cut. Stop retaliatory killing when a lion or hyena is at a kraal.</div>
+          </div>
+          <div>
+            <span class="ws-purpose ws-purpose-farm">FARMER PROTECTION</span>
+            <div style="font-size:13px;margin-top:0.55rem;line-height:1.5;">SMS the herd owner when collars cross the buffer. Warn on empty troughs, dry soil, crop-raid vibration, and night PIR at the kraal.</div>
+          </div>
+        </div>
+        <div class="ws-ag-actions">
+          <button class="ws-btn-small ws-btn-power off" type="button" data-sim-ag="incursion">Simulate cattle in Umfurudzi</button>
+          <button class="ws-btn-small" type="button" data-sim-ag="predator" style="background:#2a163d;color:#d8b4fe;">Simulate predator at kraal</button>
+          <button class="ws-btn-small" type="button" data-sim-ag="crop" style="background:#3d2208;color:#fdba74;">Simulate elephant crop raid</button>
+          <button class="ws-btn-small" type="button" data-sim-ag="fence" style="background:var(--bg-danger);color:var(--text-danger);">Simulate fence voltage drop</button>
+          <button class="ws-btn-small" type="button" data-sim-ag="recall">Recall herds to kraals</button>
+        </div>
+      </div>
+      <div class="ws-ag-split" style="margin-bottom: 1.5rem;">
+        <div class="ws-card">
+          <div class="ws-title">Livestock collars near parks</div>
+          <div id="herdList"></div>
+        </div>
+        <div class="ws-card">
+          <div class="ws-title">IoT sensor telemetry</div>
+          <div id="sensorList"></div>
+        </div>
+      </div>
+      <div class="ws-ag-split" style="margin-bottom: 1.5rem;">
+        <div class="ws-card">
+          <div class="ws-title">Conservation queue</div>
+          <p style="font-size:12px;color:var(--text-secondary);margin:-0.6rem 0 0.8rem;">Rangers: livestock inside a park, fence cuts, conflict that could end in a wildlife killing.</p>
+          <div id="agParkQueue"></div>
+        </div>
+        <div class="ws-card">
+          <div class="ws-title">Farmer protection queue</div>
+          <p style="font-size:12px;color:var(--text-secondary);margin:-0.6rem 0 0.8rem;">Herd owners: retrieve cattle, guard the kraal, check maize, refill water.</p>
+          <div id="agFarmQueue"></div>
+        </div>
+      </div>
+      <div class="ws-ag-split">
+        <div class="ws-card">
+          <div class="ws-title">Registered communal farmers</div>
+          <div id="farmerList"></div>
+        </div>
+        <div class="ws-card">
+          <div class="ws-title">Farmer SMS log</div>
+          <div id="farmerInbox"></div>
+        </div>
       </div>
     </div>
 
@@ -408,12 +501,24 @@
           <div class="ws-system-row"><span>Battery level</span><span class="ws-status-badge">87%</span></div>
           <div class="ws-system-row"><span>Runtime remaining</span><span class="ws-status-badge">64 hrs</span></div>
         </div>
+        <div class="ws-card">
+          <div class="ws-title">Smart agriculture IoT</div>
+          <div class="ws-system-row"><span>LoRaWAN gateway (Shamva)</span><span class="ws-status-badge">Online</span></div>
+          <div class="ws-system-row"><span>Livestock collars (GNSS)</span><span class="ws-status-badge" id="sysCollars">4 locked</span></div>
+          <div class="ws-system-row"><span>Fence / soil / trough nodes</span><span class="ws-status-badge" id="sysNodes">8/8</span></div>
+        </div>
+        <div class="ws-card">
+          <div class="ws-title">Farmer link</div>
+          <div class="ws-system-row"><span>SMS / EcoCash alert bus</span><span class="ws-status-badge">Ready</span></div>
+          <div class="ws-system-row"><span>Communal farmer register</span><span class="ws-status-badge">3 wards</span></div>
+          <div class="ws-system-row"><span>Last farmer notify</span><span class="ws-status-badge" id="sysSms">Idle</span></div>
+        </div>
       </div>
     </div>
   </div>
 
   <div style="background: var(--surface-2); border-top: 0.5px solid var(--border); margin-top: 3rem; padding: 1.5rem 0; text-align: center; font-size: 13px; color: var(--text-secondary);">
-    <div class="ws-container">Mashonaland Central wildlife surveillance · Umfurudzi · Bally Vaughan · Mavuradona · Pangala AI v2.0 · Last sync: <span id="syncTime">--</span></div>
+    <div class="ws-container">Mashonaland Central dual desk · parks + communal farms · Umfurudzi · Bally Vaughan · Mavuradona · Pangala AI v2.1 · Last sync: <span id="syncTime">--</span></div>
   </div>
 
   <div id="feedModal" class="ws-feed-modal ws-hidden">
@@ -429,6 +534,14 @@
           <button class="ws-btn-small" id="feedAnalyseBtn" type="button">Analyse scene</button>
           <button class="ws-btn-small ws-btn-power" id="voiceListenBtn" type="button">Start listening</button>
           <button class="ws-btn-small" id="voiceSpeakBtn" type="button">Speak replies: ON</button>
+          <label style="display:inline-flex;align-items:center;gap:0.35rem;font-size:12px;color:var(--text-secondary);">
+            Scene language
+            <select id="replyLangSelect" class="ws-btn-small" style="padding:0.25rem 0.45rem;min-width:9.5rem;">
+              <option value="sn" selected>chiShona</option>
+              <option value="nd">isiNdebele</option>
+              <option value="en">English</option>
+            </select>
+          </label>
           <button class="ws-btn-small" id="closeFeed">Close feed</button>
         </div>
       </div>
@@ -501,7 +614,7 @@
             <button class="ws-btn-small" id="feedDetectBtn" type="button" style="width:100%;margin-top:0.55rem;background:var(--bg-danger);color:var(--text-danger);">Detect registered tourist with weapon</button>
           </div>
           <div class="ws-ask-row">
-            <button type="button" class="ws-ask" data-ask="describe">Describe the scene</button>
+            <button type="button" class="ws-ask" data-ask="describe" id="askDescribeBtn">Tsanangura chiitiko</button>
             <button type="button" class="ws-ask" data-ask="faces">Who is in the frame?</button>
             <button type="button" class="ws-ask" data-ask="clothes">Clothing colours</button>
             <button type="button" class="ws-ask" data-ask="complexion">Complexion</button>
@@ -648,6 +761,7 @@
     let analyseBusy = false;
     let analyseWork = null;
     let lastNativeFaces = [];
+    let lastNativeFacesAt = 0;
     let lastCocoObjects = [];
     let cocoConfirm = [];
     let faceDetectorInst = null;
@@ -663,6 +777,442 @@
     let voiceRec = null;
     let voiceListening = false;
     let voiceSpeakOn = true;
+    let replyLang = (function () {
+      try {
+        const saved = localStorage.getItem('pangalaReplyLang');
+        const userSet = localStorage.getItem('pangalaReplyLangUserSet') === '1';
+        // Scene descriptions default to chiShona unless the operator explicitly chose another language.
+        if (!saved || (!userSet && saved === 'en')) return 'sn';
+        return saved;
+      } catch (e) { return 'sn'; }
+    })();
+    if (replyLang !== 'en' && replyLang !== 'sn' && replyLang !== 'nd') replyLang = 'sn';
+    try { localStorage.setItem('pangalaReplyLang', replyLang); } catch (e) {}
+
+    const LANG_TTS = { en: 'en-GB', sn: 'sn-ZW', nd: 'nd-ZW' };
+    const LANG_WORDS = {
+      en: {
+        liveFeed: 'Live feed',
+        deviceCam: 'device camera (live)',
+        simOptic: 'simulated park optic',
+        brightness: 'Brightness is',
+        frameIs: 'The frame is',
+        personConfirmed1: 'person is confirmed.',
+        peopleConfirmed: 'people are confirmed.',
+        noPerson: 'No person is confirmed.',
+        confirmedObjects: 'Confirmed objects:',
+        noObject: 'No object class is confirmed.',
+        simPark: 'Simulated park feed.',
+        faceDetected1: 'face detected',
+        facesDetected: 'faces detected',
+        noClearFace: 'no clear face in this frame',
+        noPersonFrame: 'No person is confirmed in this frame.',
+        noNamedObject: 'No named object is confirmed in this frame.',
+        face: 'Face',
+        object: 'Object',
+        colour: 'colour',
+        willDescribe: 'I will describe everything currently detected, one item after the other.',
+        nothingConfirmed: 'I will not name a face or object until it is confirmed. Nothing is confirmed in this frame yet.',
+        stillWatching: 'I am still watching. Ask again as the scene holds still for a moment.',
+        haveFaces: 'I have',
+        facesWord: 'face',
+        facesWordPl: 'faces',
+        willDescribeThem: 'I will describe them one after the other.',
+        noFaceLocked: 'No face is locked in this frame.',
+        haveObjects: 'I have',
+        objectsWord: 'object',
+        objectsWordPl: 'objects',
+        noExtraObject: 'No extra named object is locked besides the people.',
+        thatIsEverything: 'That is everything confirmed in this frame. I will not add anything that is not in view.',
+        of: 'of',
+        personInView: 'A person is in view.',
+        see0Faces: 'I see 0 faces. I cannot describe a person in this frame.',
+        thatIsAll: 'That is all',
+        askAnother: 'Ask another question whenever you are ready.',
+        lighting: { bright: 'bright', dim: 'dim', dark: 'dark', normal: 'normal' },
+        move: { still: 'still', slight: 'slightly moving', moving: 'moving', significant: 'significant movement' }
+      },
+      sn: {
+        liveFeed: 'Mufananidzo uri kuonekwa',
+        deviceCam: 'kamera yemudziyo (iri kufamba)',
+        simOptic: 'mufananidzo wepaki wakafananidzirwa',
+        brightness: 'Kupenya kuri',
+        frameIs: 'Chiratidzo chiri',
+        personConfirmed1: 'munhu akasimbiswa.',
+        peopleConfirmed: 'vanhu vakasimbiswa.',
+        noPerson: 'Hapana munhu akasimbiswa.',
+        confirmedObjects: 'Zvinhu zvakasimbiswa:',
+        noObject: 'Hapana rudzi rwechinhu rwakasimbiswa.',
+        simPark: 'Mufananidzo wepaki wakafananidzirwa.',
+        faceDetected1: 'chiso chakaonekwa',
+        facesDetected: 'zviso zvakaonekwa',
+        noClearFace: 'hapana chiso chakajeka muchiratidzo chino',
+        noPersonFrame: 'Hapana munhu akasimbiswa muchiratidzo chino.',
+        noNamedObject: 'Hapana chinhu chine zita chakasimbiswa muchiratidzo chino.',
+        face: 'Chiso',
+        object: 'Chinhu',
+        colour: 'ruvara',
+        willDescribe: 'Ndichatsanangura zvese zviri kuonekwa izvozvi, chimwe chete mushure mechime.',
+        nothingConfirmed: 'Handisi kuzotaura chiso kana chinhu kusvika zvasimbiswa. Hapana chakasimbiswa muchiratidzo chino.',
+        stillWatching: 'Ndichiri kutarisa. Bvunza zvakare kana chiratidzo chagamuchira.',
+        haveFaces: 'Ndine',
+        facesWord: 'chiso',
+        facesWordPl: 'zviso',
+        willDescribeThem: 'Ndichazvitsanangura chimwe chete mushure mechime.',
+        noFaceLocked: 'Hapana chiso chakabatwa muchiratidzo chino.',
+        haveObjects: 'Ndine',
+        objectsWord: 'chinhu',
+        objectsWordPl: 'zvinhu',
+        noExtraObject: 'Hapana chimwe chinhu chine zita chakabatwa kunze kwevanhu.',
+        thatIsEverything: 'Izvozvo ndizvo zvese zvakasimbiswa muchiratidzo chino. Handisi kuwedzera chisingaoneki.',
+        of: 'pa',
+        personInView: 'Pane munhu ari kuonekwa.',
+        see0Faces: 'Ndinoona zviso 0. Handikwanisi kutsanangura munhu muchiratidzo chino.',
+        thatIsAll: 'Ndizvo zvese',
+        askAnother: 'Bvunza mumwe mubvunzo kana wagadzirira.',
+        lighting: { bright: 'kupenya kwakanyanya', dim: 'kupenya kushoma', dark: 'rima', normal: 'kupenya kwakajairika' },
+        move: { still: 'chakamira', slight: 'chiri kufamba zvishoma', moving: 'chiri kufamba', significant: 'kufamba kukuru' }
+      },
+      nd: {
+        liveFeed: 'Ukubonisa okuphilayo',
+        deviceCam: 'ikhamera yesilondolozi (ephilayo)',
+        simOptic: 'ukubonisa kwepaki okulinganisiweyo',
+        brightness: 'Ukukhanya kungu',
+        frameIs: 'Isithombe singu',
+        personConfirmed1: 'umuntu uqinisekisiwe.',
+        peopleConfirmed: 'abantu baqinisekisiwe.',
+        noPerson: 'Akukho muntu oqinisekisiweyo.',
+        confirmedObjects: 'Izinto eziqinisekisiweyo:',
+        noObject: 'Akukho uhlobo lwento oluqinisekisiweyo.',
+        simPark: 'Ukubonisa kwepaki okulinganisiweyo.',
+        faceDetected1: 'ubuso obutholiwe',
+        facesDetected: 'ubuso obutholiwe',
+        noClearFace: 'akukho buso obucacileyo kulesi sithombe',
+        noPersonFrame: 'Akukho muntu oqinisekisiweyo kulesi sithombe.',
+        noNamedObject: 'Akukho nto enegama eqinisekisiweyo kulesi sithombe.',
+        face: 'Ubuso',
+        object: 'Into',
+        colour: 'umbala',
+        willDescribe: 'Ngizochaza konke okutholiwe manje, into ngayinye ngemva kwenye.',
+        nothingConfirmed: 'Angizukubiza ubuso noma into kuze kuqinisekiswe. Akukho okqinisekisiweyo kulesi sithombe okwamanje.',
+        stillWatching: 'Ngisalokhu ngibuka. Buza futhi lapho isithombe sizola.',
+        haveFaces: 'Nginabo',
+        facesWord: 'ubuso',
+        facesWordPl: 'ubuso',
+        willDescribeThem: 'Ngizozichaza bunye ngemva komunye.',
+        noFaceLocked: 'Akukho buso obubanjwe kulesi sithombe.',
+        haveObjects: 'Nginazo',
+        objectsWord: 'into',
+        objectsWordPl: 'izinto',
+        noExtraObject: 'Akukho nto enegama eyengeziwe ngaphandle kwabantu.',
+        thatIsEverything: 'Lokho yikho konke okuqinisekisiweyo kulesi sithombe. Angizokwengeza okungabonakali.',
+        of: 'kwa',
+        personInView: 'Kukhona umuntu obonakalayo.',
+        see0Faces: 'Ngibona ubuso 0. Angikwazi ukuchaza umuntu kulesi sithombe.',
+        thatIsAll: 'Yikho konke',
+        askAnother: 'Buza omunye umbuzo nxa usulungele.',
+        lighting: { bright: 'kukhanya kakhulu', dim: 'kukhanya kancane', dark: 'kumnyama', normal: 'ukukhanya okujwayelekile' },
+        move: { still: 'simile', slight: 'siyahamba kancane', moving: 'siyahamba', significant: 'ukunyakaza okukhulu' }
+      }
+    };
+    const OBJECT_I18N = {
+      person: { sn: 'munhu', nd: 'umuntu' },
+      people: { sn: 'vanhu', nd: 'abantu' },
+      face: { sn: 'chiso', nd: 'ubuso' },
+      car: { sn: 'motokari', nd: 'imoto' },
+      truck: { sn: 'rori', nd: 'iloli' },
+      bus: { sn: 'bhazi', nd: 'ibhasi' },
+      bicycle: { sn: 'bhasikoro', nd: 'ibhayisikili' },
+      motorcycle: { sn: 'mudhudhudhu', nd: 'isithuthuthu' },
+      dog: { sn: 'imbwa', nd: 'inja' },
+      cat: { sn: 'katsi', nd: 'ikati' },
+      bird: { sn: 'shiri', nd: 'inyoni' },
+      elephant: { sn: 'nzou', nd: 'indlovu' },
+      horse: { sn: 'bhiza', nd: 'ihhashi' },
+      cow: { sn: 'mombe', nd: 'inkomo' },
+      sheep: { sn: 'hwai', nd: 'imvu' },
+      backpack: { sn: 'bhegi remusana', nd: 'isikhwama somhlane' },
+      handbag: { sn: 'bhegi', nd: 'isikhwama' },
+      umbrella: { sn: 'amburera', nd: 'isambrela' },
+      bottle: { sn: 'bhodhoro', nd: 'ibhodlela' },
+      cup: { sn: 'kapu', nd: 'inkomishi' },
+      chair: { sn: 'chigaro', nd: 'isihlalo' },
+      couch: { sn: 'sofa', nd: 'usofa' },
+      bed: { sn: 'mubhedha', nd: 'umbhede' },
+      laptop: { sn: 'kombiyuta', nd: 'ikhompyutha' },
+      'cell phone': { sn: 'foni', nd: 'ifoni' },
+      phone: { sn: 'foni', nd: 'ifoni' },
+      book: { sn: 'bhuku', nd: 'incwadi' },
+      knife: { sn: 'banga', nd: 'ummese' },
+      scissors: { sn: 'girezi', nd: 'isikele' },
+      gun: { sn: 'pfuti', nd: 'isibhamu' },
+      rifle: { sn: 'rifuru', nd: 'isibhamu' },
+      weapon: { sn: 'chombo', nd: 'isikhali' },
+      fire: { sn: 'moto', nd: 'umlilo' },
+      smoke: { sn: 'utsi', nd: 'umusi' },
+      tree: { sn: 'muti', nd: 'isihlahla' },
+      fence: { sn: 'fenzi', nd: 'ucingo' },
+      vehicle: { sn: 'motokari', nd: 'imoto' },
+      boat: { sn: 'bhoti', nd: 'isikebhe' },
+      airplane: { sn: 'ndege', nd: 'indiza' },
+      traffic: { sn: 'traffic light', nd: 'irobhothi' },
+      'traffic light': { sn: 'redhiyo yemigwagwa', nd: 'irobhothi' },
+      stop: { sn: 'stop sign', nd: 'uphawu lokumisa' },
+      'stop sign': { sn: 'chiratidzo chekumira', nd: 'uphawu lokumisa' },
+      bench: { sn: 'bhenji', nd: 'ibhentshi' },
+      suitcase: { sn: 'sutukesi', nd: 'isuthukesi' },
+      tie: { sn: 'tai', nd: 'ithayi' },
+      frisbee: { sn: 'firizibhi', nd: 'ifrisbee' },
+      skis: { sn: 'skis', nd: 'amaskis' },
+      snowboard: { sn: 'snowboard', nd: 'isnowboard' },
+      'sports ball': { sn: 'bora', nd: 'ibhola' },
+      kite: { sn: 'kaiti', nd: 'ikhayithi' },
+      'baseball bat': { sn: 'bhatibhora', nd: 'ibhethi' },
+      'baseball glove': { sn: 'girovhu', nd: 'igilavu' },
+      skateboard: { sn: 'skateboard', nd: 'iskateboard' },
+      surfboard: { sn: 'surfboard', nd: 'isurfboard' },
+      'tennis racket': { sn: 'racket', nd: 'irekhethi' },
+      wine: { sn: 'waini', nd: 'iwayini' },
+      'wine glass': { sn: 'girazi rewaini', nd: 'ingilazi yewayini' },
+      fork: { sn: 'forogo', nd: 'imfoloko' },
+      spoon: { sn: 'chipunu', nd: 'isipunu' },
+      bowl: { sn: 'mbiya', nd: 'isitya' },
+      banana: { sn: 'bhanana', nd: 'ubhanana' },
+      apple: { sn: 'apuro', nd: 'i-apula' },
+      sandwich: { sn: 'sandwich', nd: 'isamishi' },
+      orange: { sn: 'orenji', nd: 'iwolintshi' },
+      broccoli: { sn: 'broccoli', nd: 'ibhrokholi' },
+      carrot: { sn: 'karoti', nd: 'ikarothi' },
+      'hot dog': { sn: 'hot dog', nd: 'i-hot dog' },
+      pizza: { sn: 'pizza', nd: 'iphiza' },
+      donut: { sn: 'donut', nd: 'idonathi' },
+      cake: { sn: 'keki', nd: 'ikhekhe' },
+      'potted plant': { sn: 'chirimwa muchirongo', nd: 'isitshalo esembhodweni' },
+      toilet: { sn: 'chimbuzi', nd: 'indlu yangasese' },
+      tv: { sn: 'TV', nd: 'i-TV' },
+      'tv monitor': { sn: 'TV', nd: 'i-TV' },
+      mouse: { sn: 'mbeva', nd: 'igundwane' },
+      remote: { sn: 'rimoti', nd: 'iremothi' },
+      keyboard: { sn: 'khibhodhi', nd: 'ikhibhodi' },
+      microwave: { sn: 'microwave', nd: 'imicrowave' },
+      oven: { sn: 'ovheni', nd: 'i-oven' },
+      toaster: { sn: 'toaster', nd: 'itoasta' },
+      sink: { sn: 'sink', nd: 'isinki' },
+      refrigerator: { sn: 'firiji', nd: 'ifriji' },
+      clock: { sn: 'wachi', nd: 'iwashi' },
+      vase: { sn: 'vazi', nd: 'ivazi' },
+      scissors: { sn: 'girezi', nd: 'isikele' },
+      'teddy bear': { sn: 'teddy bear', nd: 'ithedi' },
+      'hair drier': { sn: 'hair dryer', nd: 'isomisimwali' },
+      toothbrush: { sn: 'brush yemeno', nd: 'ibrashi yamazinyo' }
+    };
+    const COLOR_I18N = {
+      red: { sn: 'tsvuku', nd: 'obomvu' },
+      blue: { sn: 'bhuruu', nd: 'oluhlaza okwesibhakabhaka' },
+      green: { sn: 'girini', nd: 'oluhlaza' },
+      yellow: { sn: 'yero', nd: 'ophuzi' },
+      black: { sn: 'nhema', nd: 'omnyama' },
+      white: { sn: 'chena', nd: 'omhlophe' },
+      grey: { sn: 'grey', nd: 'ompunga' },
+      gray: { sn: 'grey', nd: 'ompunga' },
+      brown: { sn: 'bhurawuni', nd: 'onsundu' },
+      orange: { sn: 'orenji', nd: 'owolintshi' },
+      pink: { sn: 'pink', nd: 'ophinki' },
+      purple: { sn: 'pepuru', nd: 'onsomi' },
+      dark: { sn: 'rakasviba', nd: 'omnyama' },
+      light: { sn: 'rakapenya', nd: 'okhanyayo' }
+    };
+
+
+    const PHRASE_I18N = {
+      sn: [
+        [/I am Pangala\./gi, 'Ndiri Pangala.'],
+        [/Live feed/gi, 'Mufananidzo uri kuonekwa'],
+        [/device camera \(live\)/gi, 'kamera yemudziyo (iri kufamba)'],
+        [/simulated park optic/gi, 'mufananidzo wepaki wakafananidzirwa'],
+        [/Brightness is/gi, 'Kupenya kuri'],
+        [/The frame is/gi, 'Chiratidzo chiri'],
+        [/person is confirmed/gi, 'munhu akasimbiswa'],
+        [/people are confirmed/gi, 'vanhu vakasimbiswa'],
+        [/No person is confirmed/gi, 'Hapana munhu akasimbiswa'],
+        [/Confirmed objects:/gi, 'Zvinhu zvakasimbiswa:'],
+        [/No object class is confirmed/gi, 'Hapana rudzi rwechinhu rwakasimbiswa'],
+        [/No named object is confirmed in this frame/gi, 'Hapana chinhu chine zita chakasimbiswa muchiratidzo chino'],
+        [/No face is confirmed in this frame/gi, 'Hapana chiso chakasimbiswa muchiratidzo chino'],
+        [/A person is in view/gi, 'Pane munhu ari kuonekwa'],
+        [/Assumed clothing/gi, 'Zvipfeko zvinofungidzirwa'],
+        [/Assumed:/gi, 'Zvinofungidzirwa:'],
+        [/ordinary top/gi, 'hembe yakajairika'],
+        [/no extra items locked on this person/gi, 'hapana zvimwe zvinhu zvakabatwa pamunhu uyu'],
+        [/registered tourist/gi, 'mushanyi akanyoreswa'],
+        [/not on tourist or staff register/gi, 'haana kunyoreswa se mushanyi kana mushandi'],
+        [/Skin warm tan/gi, 'Ganda rine ruvara rwepasi rwakadziya'],
+        [/unknown adult/gi, 'mukuru asingazivikanwi'],
+        [/gender not locked/gi, 'murume kana mukadzi hauna kusimbiswa'],
+        [/I will describe everything currently detected, one item after the other/gi, 'Ndichatsanangura zvese zviri kuonekwa izvozvi, chimwe chete mushure mechime'],
+        [/That is everything confirmed in this frame/gi, 'Izvozvo ndizvo zvese zvakasimbiswa muchiratidzo chino'],
+        [/I will not add anything that is not in view/gi, 'Handisi kuwedzera chisingaoneki'],
+        [/Still watching/gi, 'Ndichiri kutarisa'],
+        [/Ready\. Ask another question/gi, 'Ndagadzirira. Bvunza mumwe mubvunzo'],
+        [/Conversation is open/gi, 'Hurukuro ichiri kuvhurika'],
+        [/keep watching/gi, 'ramba uchitarisa'],
+        [/describe the scene/gi, 'tsanangura chiitiko'],
+        [/describe the faces/gi, 'tsanangura zviso'],
+        [/Authorise an operator/gi, 'Bvumidza mushandi'],
+        [/authorised operator/gi, 'mushandi akabvumidzwa'],
+        [/must unlock this feed first/gi, 'anofanira kuvhura chiratidzo ichi kutanga'],
+        [/I will not follow that command/gi, 'Handisi kutevera murairo iwoyo'],
+        [/confirmed in frame/gi, 'chasimbiswa muchiratidzo'],
+        [/model class/gi, 'kirasi yemodhi'],
+        [/after repeat agreement/gi, 'pashure pekubvumirana kakawanda'],
+        [/distant/gi, 'kure'],
+        [/close/gi, 'pedyo'],
+        [/about /gi, 'inenge '],
+        [/large/gi, 'hombe'],
+        [/medium/gi, 'pakati'],
+        [/small/gi, 'diki'],
+        [/upper-left/gi, 'kumusoro kuruboshwe'],
+        [/upper-right/gi, 'kumusoro kurudyi'],
+        [/upper-centre|upper-center/gi, 'kumusoro pakati'],
+        [/lower-left/gi, 'pasi kuruboshwe'],
+        [/lower-right/gi, 'pasi kurudyi'],
+        [/lower-centre|lower-center/gi, 'pasi pakati'],
+        [/mid-left/gi, 'pakati kuruboshwe'],
+        [/mid-right/gi, 'pakati kurudyi'],
+        [/centre|center/gi, 'pakati'],
+        [/male/gi, 'murume'],
+        [/female/gi, 'mukadzi'],
+        [/person/gi, 'munhu'],
+        [/people/gi, 'vanhu'],
+        [/face/gi, 'chiso'],
+        [/faces/gi, 'zviso'],
+        [/object/gi, 'chinhu'],
+        [/objects/gi, 'zvinhu'],
+        [/colour|color/gi, 'ruvara'],
+        [/bright/gi, 'kupenya'],
+        [/dark/gi, 'rima'],
+        [/still/gi, 'chakamira'],
+        [/moving/gi, 'chiri kufamba']
+      ],
+      nd: [
+        [/I am Pangala\./gi, 'NginguPangala.'],
+        [/Live feed/gi, 'Ukubonisa okuphilayo'],
+        [/describe the scene/gi, 'chaza isigcawu'],
+        [/person/gi, 'umuntu'],
+        [/people/gi, 'abantu'],
+        [/face/gi, 'ubuso'],
+        [/object/gi, 'into'],
+        [/colour|color/gi, 'umbala']
+      ]
+    };
+
+    function L() {
+      return LANG_WORDS[replyLang] || LANG_WORDS.en;
+    }
+    function ttsLang() {
+      return LANG_TTS[replyLang] || 'en-GB';
+    }
+    function trName(name) {
+      if (!name || replyLang === 'en') return name;
+      const key = String(name).toLowerCase().trim();
+      const hit = OBJECT_I18N[key];
+      if (hit && hit[replyLang]) return hit[replyLang];
+      return name;
+    }
+    function trColor(color) {
+      if (!color || replyLang === 'en') return color;
+      const parts = String(color).toLowerCase().split(/[\s\-]+/);
+      return parts.map(function (p) {
+        const hit = COLOR_I18N[p];
+        return (hit && hit[replyLang]) ? hit[replyLang] : p;
+      }).join(' ');
+    }
+    function trLighting(label) {
+      const pack = L().lighting || {};
+      const k = String(label || '').toLowerCase();
+      if (k.indexOf('bright') >= 0) return pack.bright || label;
+      if (k.indexOf('dim') >= 0) return pack.dim || label;
+      if (k.indexOf('dark') >= 0) return pack.dark || label;
+      return pack.normal || label;
+    }
+    function trMove(label) {
+      const pack = L().move || {};
+      const k = String(label || '').toLowerCase();
+      if (k.indexOf('significant') >= 0) return pack.significant || label;
+      if (k.indexOf('slight') >= 0) return pack.slight || label;
+      if (k === 'moving' || k.indexOf('moving') >= 0) return pack.moving || label;
+      if (k.indexOf('still') >= 0) return pack.still || label;
+      return label;
+    }
+    function localizePhrase(text) {
+      if (!text || replyLang === 'en') return text;
+      let out = String(text);
+      const phrases = PHRASE_I18N[replyLang] || [];
+      phrases.forEach(function (pair) {
+        out = out.replace(pair[0], pair[1]);
+      });
+      Object.keys(OBJECT_I18N).sort(function (a, b) { return b.length - a.length; }).forEach(function (en) {
+        const local = OBJECT_I18N[en][replyLang];
+        if (!local) return;
+        out = out.replace(new RegExp('\\b' + en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi'), local);
+      });
+      Object.keys(COLOR_I18N).sort(function (a, b) { return b.length - a.length; }).forEach(function (en) {
+        const local = COLOR_I18N[en][replyLang];
+        if (!local) return;
+        out = out.replace(new RegExp('\\b' + en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi'), local);
+      });
+      return out;
+    }
+    function rebuildLocalizedFields(a, liveReady, cam) {
+      if (!a) return a;
+      if (replyLang === 'en') return a;
+      const W = L();
+      const faces = a.faces || [];
+      const objects = a.objects || [];
+      const lighting = trLighting(a.lighting);
+      const move = trMove(a.move);
+      let sceneSpeech;
+      if (liveReady) {
+        sceneSpeech = W.brightness + ' ' + lighting + '. ' + W.frameIs + ' ' + move + '.' +
+          (faces.length
+            ? (' ' + faces.length + ' ' + (faces.length === 1 ? W.personConfirmed1 : W.peopleConfirmed))
+            : (' ' + W.noPerson)) +
+          (objects.length
+            ? (' ' + W.confirmedObjects + ' ' + objects.map(function (o) { return trName(o.name); }).join(', ') + '.')
+            : (' ' + W.noObject));
+      } else {
+        sceneSpeech = localizePhrase((cam && cam.detection && cam.detection.explain) || W.simPark);
+      }
+      function oneFace(f, i) {
+        const base = localizePhrase(f.personSpeech || f.line || W.personInView);
+        return W.face + ' ' + (i + 1) + ': ' + base;
+      }
+      function oneObj(o, i) {
+        const detail = o.detail
+          ? localizePhrase(o.detail)
+          : (trName(o.name) + ' — ' + W.colour + ' ' + trColor(o.color || o.colour || '') + ', ' + localizePhrase(o.sizeLabel || '') + ', ' + localizePhrase(o.position || '') + '.');
+        return W.object + ' ' + (i + 1) + ': ' + detail;
+      }
+      const faceReport = faces.length
+        ? faces.map(oneFace).join('\n')
+        : W.noPersonFrame;
+      const objectReport = objects.length
+        ? objects.map(oneObj).join('\n')
+        : W.noNamedObject;
+      const source = (typeof liveDeviceOnFeed !== 'undefined' && liveDeviceOnFeed) ? W.deviceCam : W.simOptic;
+      a.sceneSpeech = sceneSpeech;
+      a.faceReport = faceReport;
+      a.objectReport = objectReport;
+      a.description = [W.liveFeed + ' (' + source + ').', sceneSpeech, '', faceReport, '', objectReport].join('\n');
+      a.spokenFaces = faceReport.replace(/\n+/g, ' ');
+      a.spoken = a.spokenFaces;
+      a.people = faces.length
+        ? (faces.length + ' ' + (faces.length === 1 ? W.faceDetected1 : W.facesDetected))
+        : W.noClearFace;
+      a.short = a.people + (a.place ? ' · ' + a.place : '') + (a.faceMatch ? ' · ' + a.faceMatch.faceId : '');
+      return a;
+    }
+
     let voiceStayOn = false;
     let voicePausedForSpeech = false;
     let operatorSession = null;
@@ -698,6 +1248,43 @@
       { id: 'INC-003', status: 'INVESTIGATING', type: 'Unauthorised activity', detail: 'Unknown persons at Nyagui water point after hours. CAM-002.', loc: 'Nyagui waterhole', when: 'Tonight 22:32' },
       { id: 'INC-004', status: 'RESOLVED', type: 'Weapon detection', detail: 'Rifle in thermal feed at Bally Vaughan; rangers apprehended suspect.', loc: 'Bally Vaughan', when: 'Yesterday' }
     ];
+
+    const PARKS = [
+      { id: 'umfurudzi', name: 'Umfurudzi Park', latMin: -17.30, latMax: -17.05, lngMin: 31.72, lngMax: 32.02 },
+      { id: 'bally', name: 'Bally Vaughan', latMin: -17.76, latMax: -17.68, lngMin: 31.30, lngMax: 31.40 },
+      { id: 'mavuradona', name: 'Mavuradona Wilderness', latMin: -16.95, latMax: -16.75, lngMin: 31.42, lngMax: 31.68 }
+    ];
+    const BUFFER_LAT = 0.028;
+    const BUFFER_LNG = 0.030;
+
+    const farmers = [
+      { id: 'F-01', name: 'Tendai Chipo', phone: '+263 77 214 8810', ward: 'Shamva communal', village: 'Madziwa' },
+      { id: 'F-02', name: 'Rudo Moyo', phone: '+263 71 903 4412', ward: 'Mazowe south', village: 'Glendale' },
+      { id: 'F-03', name: 'Farai Nyoni', phone: '+263 78 551 2209', ward: 'Muzarabani', village: 'Centenary' }
+    ];
+
+    const herds = [
+      { id: 'H-204', name: 'Madziwa kraal herd', species: 'cattle', head: 42, farmerId: 'F-01', collar: 'GPS-C-204', lat: -17.148, lng: 32.058, heading: 0.8, zone: 'communal', homeLat: -17.148, homeLng: 32.058, rssi: -91, drive: null },
+      { id: 'H-118', name: 'Glendale goats', species: 'goats', head: 31, farmerId: 'F-02', collar: 'GPS-G-118', lat: -17.805, lng: 31.268, heading: 2.2, zone: 'communal', homeLat: -17.805, homeLng: 31.268, rssi: -88, drive: null },
+      { id: 'H-055', name: 'Centenary mixed herd', species: 'cattle', head: 18, farmerId: 'F-03', collar: 'GPS-C-055', lat: -16.995, lng: 31.375, heading: 4.1, zone: 'communal', homeLat: -16.995, homeLng: 31.375, rssi: -94, drive: null },
+      { id: 'H-311', name: 'Nyagui river cattle', species: 'cattle', head: 27, farmerId: 'F-01', collar: 'GPS-C-311', lat: -17.170, lng: 32.038, heading: 1.6, zone: 'communal', homeLat: -17.210, homeLng: 32.055, rssi: -86, drive: null }
+    ];
+
+    const sensors = [
+      { id: 'IOT-F01', kind: 'fence', name: 'Umfurudzi east fence voltage', loc: 'Park–communal boundary', lat: -17.162, lng: 31.978, value: 8.4, unit: 'kV', okMin: 6, purpose: 'both', online: true },
+      { id: 'IOT-F02', kind: 'fence', name: 'Madziwa kraal energiser', loc: 'Shamva communal', lat: -17.148, lng: 32.028, value: 7.1, unit: 'kV', okMin: 5, purpose: 'farmer', online: true },
+      { id: 'IOT-S01', kind: 'soil', name: 'Mazowe plot soil moisture', loc: 'Glendale fields', lat: -17.685, lng: 31.310, value: 28, unit: '%', okMin: 22, purpose: 'farmer', online: true, max: 45 },
+      { id: 'IOT-W01', kind: 'water', name: 'Madziwa cattle trough', loc: 'Shamva communal', lat: -17.150, lng: 32.022, value: 64, unit: '%', okMin: 25, purpose: 'farmer', online: true, max: 100 },
+      { id: 'IOT-W02', kind: 'water', name: 'Nyagui shared pan', loc: 'Park buffer · wildlife + cattle', lat: -17.186, lng: 31.910, value: 41, unit: '%', okMin: 20, purpose: 'both', online: true, max: 100 },
+      { id: 'IOT-K01', kind: 'kraal', name: 'Madziwa kraal PIR / magnet', loc: 'Night kraal', lat: -17.147, lng: 32.029, value: 0, unit: 'hits/min', okMin: 0, purpose: 'farmer', online: true, max: 12 },
+      { id: 'IOT-WX01', kind: 'weather', name: 'Shamva LoRa weather', loc: 'Bindura command relay', lat: -17.300, lng: 31.550, value: 26, unit: '°C', okMin: null, purpose: 'both', online: true, rain: 0, wind: 12 },
+      { id: 'IOT-C01', kind: 'crop', name: 'Glendale crop-raid geophone', loc: 'Maize stand · Bally Vaughan buffer', lat: -17.702, lng: 31.328, value: 0.12, unit: 'g', okMin: 0, purpose: 'both', online: true, max: 2, warnAt: 0.8 }
+    ];
+
+    const agAlerts = [];
+    const farmerInbox = [];
+    let agSeq = 1;
+    let lastSmsAt = 'Idle';
 
     let alertFilter = 'all';
     let activeFeed = null;
@@ -842,7 +1429,7 @@
     }
 
     function chipHtml(type, label) {
-      const cls = type === 'poacher' ? 'ws-chip-poacher' : type === 'fire' ? 'ws-chip-fire' : type === 'unauthorized' ? 'ws-chip-unauth' : type === 'tourist' ? 'ws-chip-tourist' : type === 'mining' ? 'ws-chip-mining' : 'ws-chip-clear';
+      const cls = type === 'poacher' ? 'ws-chip-poacher' : type === 'fire' ? 'ws-chip-fire' : type === 'unauthorized' ? 'ws-chip-unauth' : type === 'tourist' ? 'ws-chip-tourist' : type === 'mining' ? 'ws-chip-mining' : type === 'livestock' ? 'ws-chip-livestock' : type === 'predator' ? 'ws-chip-predator' : type === 'crop' ? 'ws-chip-crop' : type === 'fence' ? 'ws-chip-fence' : 'ws-chip-clear';
       return '<span class="ws-chip ' + cls + '">' + label + '</span>';
     }
 
@@ -864,6 +1451,7 @@
       document.getElementById(tabName).classList.remove('ws-hidden');
       document.querySelectorAll('.ws-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tabName));
       if (tabName === 'tracking') drawMaps();
+      if (tabName === 'smartag') renderAg();
       if (tabName === 'tourists') renderTourists();
       else if (!liveDeviceOnFeed && !activeFeed) stopDeviceCamera();
     }
@@ -908,15 +1496,21 @@
 
     function renderAlerts() {
       const threatTypes = cameras.filter(c => c.detection.type !== 'clear' && c.detection.type !== 'tourist');
-      const list = threatTypes.filter(c => {
-        if (alertFilter === 'all') return true;
-        return c.detection.type === alertFilter;
-      });
-      document.getElementById('alertFilters').innerHTML = ['all','poacher','fire','unauthorized'].map(f => {
-        const label = f === 'all' ? 'All' : f === 'poacher' ? 'Poachers' : f === 'fire' ? 'Fire' : 'Unauthorised';
+      const agActive = agAlerts.filter(a => a.status === 'ACTIVE');
+      const filters = [
+        ['all', 'All'],
+        ['poacher', 'Poachers'],
+        ['fire', 'Fire'],
+        ['unauthorized', 'Unauthorised'],
+        ['livestock', 'Livestock'],
+        ['predator', 'Predator'],
+        ['crop', 'Crop raid'],
+        ['fence', 'Fence IoT']
+      ];
+      document.getElementById('alertFilters').innerHTML = filters.map(([f, label]) => {
         return `<button class="ws-filter ${alertFilter===f?'on':''}" data-af="${f}">${label}</button>`;
       }).join('');
-      document.getElementById('alertList').innerHTML = list.map(c => `
+      const camItems = threatTypes.filter(c => alertFilter === 'all' || c.detection.type === alertFilter).map(c => `
         <div class="ws-alert ${c.detection.severity === 'critical' ? 'critical' : 'high'}">
           <div class="ws-alert-title">${c.detection.title}</div>
           <div class="ws-alert-location">${c.zone} · ${c.id} · ${fmtGps(c.lat, c.lng)}</div>
@@ -925,9 +1519,12 @@
             <button class="ws-btn-small" data-alert-feed="${c.id}">Ask Pangala on this camera</button>
             <button class="ws-btn-small" data-dispatch="${c.id}">Dispatch rangers</button>
           </div>
-        </div>`).join('');
-      document.getElementById('statAlerts').textContent = threatTypes.length + pendingAuth().length;
+        </div>`);
+      const agItems = agActive.filter(a => alertFilter === 'all' || a.type === alertFilter).map(agAlertHtml);
+      document.getElementById('alertList').innerHTML = (camItems.join('') + agItems.join('')) || '<p style="color:var(--text-secondary);font-size:13px;">No alerts in this filter.</p>';
+      document.getElementById('statAlerts').textContent = threatTypes.length + pendingAuth().length + agActive.length;
       renderMgmtQueue();
+      renderAgStats();
     }
 
     function renderStaff(q = '') {
@@ -1411,36 +2008,59 @@
       return out;
     }
 
+    function personHeadsFromCoco(w, h) {
+      return (lastCocoObjects || []).filter(function (o) {
+        return o.rawClass === 'person' && typeof o.x === 'number' && o.w > 8 && o.h > 8;
+      }).map(function (o) {
+        const fw = Math.max(18, o.w * 0.55);
+        const fh = Math.max(22, Math.min(o.h * 0.42, o.w * 0.75));
+        return {
+          x: Math.max(0, o.x + (o.w - fw) / 2),
+          y: Math.max(0, o.y),
+          w: Math.min(fw, w),
+          h: Math.min(fh, h),
+          source: 'person-head'
+        };
+      });
+    }
+
     function pickPrimaryFaces(boxes, w, h) {
       const api = nmsFaces((boxes || []).filter(function (b) { return b.source === 'api'; }));
+      const skin = nmsFaces((boxes || []).filter(function (b) { return b.source === 'skin'; }));
       const people = (lastCocoObjects || []).filter(function (o) { return o.rawClass === 'person'; });
-      if (!api.length) return [];
-      if (api.length === 1) return api;
+      let pool = api.slice();
+      if (!pool.length) {
+        // FaceDetector often blanks a frame even when a person is clearly visible.
+        // Fall back to skin blobs and COCO person heads so Pangala does not deny faces.
+        pool = nmsFaces(skin.concat(personHeadsFromCoco(w, h)));
+      }
+      if (!pool.length) return [];
+      if (pool.length === 1) return pool;
       if (people.length === 1) {
         const p = people[0];
-        const onPerson = api.filter(function (b) { return iouBox(b, p) > 0.04 || boxesOverlapOrContain(b, p); });
+        const onPerson = pool.filter(function (b) { return iouBox(b, p) > 0.04 || boxesOverlapOrContain(b, p); });
         if (onPerson.length) {
           onPerson.sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
           return [onPerson[0]];
         }
-        return [api[0]];
+        return [pool[0]];
       }
       if (people.length > 1) {
         const used = [];
         people.forEach(function (p) {
-          const hits = api.filter(function (b) {
+          const hits = pool.filter(function (b) {
             return used.indexOf(b) < 0 && (boxesOverlapOrContain(b, p) || iouBox(b, p) > 0.06);
           });
           hits.sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
           if (hits[0]) used.push(hits[0]);
         });
-        return used.length ? used : api.slice(0, people.length);
+        return used.length ? used : pool.slice(0, Math.min(6, people.length));
       }
-      if (api.length > 1 && boxCenterDist(api[0], api[1]) < Math.max(api[0].w, api[0].h, api[1].w, api[1].h) * 1.15) {
-        api.sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
-        return [api[0]];
+      if (pool.length > 1 && boxCenterDist(pool[0], pool[1]) < Math.max(pool[0].w, pool[0].h, pool[1].w, pool[1].h) * 1.15) {
+        pool.sort(function (a, b) { return (b.w * b.h) - (a.w * a.h); });
+        return [pool[0]];
       }
-      return api.slice(0, 6);
+      return pool.slice(0, 6);
     }
 
     function collapseOverlappingTracks(tracks) {
@@ -1608,7 +2228,9 @@
         a.complexionReport = oneByOne(faces, 'Face', function (f) { return f.complexionSpeech || 'Complexion not locked.'; });
         a.spectaclesReport = oneByOne(faces, 'Face', function (f) { return f.spectaclesSpeech || 'Spectacles not locked.'; });
       } else {
-        a.faceReport = 'No face is confirmed in this frame.';
+        a.faceReport = ((lastCocoObjects || []).some(function (o) { return o.rawClass === 'person'; })
+          ? 'A person is in frame; face landmarks are still locking. Keep the face toward the camera for a moment.'
+          : 'No face is confirmed in this frame.');
         a.clothesReport = 'I do not have clothing colour locked on anyone in this frame.';
         a.complexionReport = 'I do not have a face-skin sample, so complexion is not locked.';
         a.spectaclesReport = 'I do not have a face in frame, so spectacles are not locked.';
@@ -1619,11 +2241,13 @@
       if (!a || !liveDeviceOnFeed) return a;
       const now = performance.now();
       const objs = (a.objects || []).filter(function (o) {
-        return o.source === 'coco' && typeof o.x === 'number' && (o.areaPct == null || o.areaPct < 68);
+        return o.source === 'coco' && typeof o.x === 'number' && (o.areaPct == null || o.areaPct < 78);
       });
-      const faces = (a.faces || []).filter(function (f) { return f.source === 'api' && typeof f.x === 'number'; });
-      objectTracks = collapseObjectTracks(matchAndLockTracks(objectTracks, objs, now, 700, true));
-      faceTracks = collapseOverlappingTracks(matchAndLockTracks(faceTracks, faces, now, 550, false));
+      const faces = (a.faces || []).filter(function (f) {
+        return typeof f.x === 'number' && (f.source === 'api' || f.source === 'skin' || f.source === 'person-head');
+      });
+      objectTracks = collapseObjectTracks(matchAndLockTracks(objectTracks, objs, now, 1400, true));
+      faceTracks = collapseOverlappingTracks(matchAndLockTracks(faceTracks, faces, now, 1600, false));
       const peopleN = (lastCocoObjects || []).filter(function (o) { return o.rawClass === 'person'; }).length;
       const nativeN = (lastNativeFaces || []).length;
       if (faceTracks.length > 1 && (nativeN === 1 || peopleN === 1)) {
@@ -1638,8 +2262,9 @@
         if (t.name === 'scene') return false;
         const animal = isAnimalClass(t.rawClass);
         const ceilingDisc = isCeilingDiscClass(t.rawClass);
-        const need = animal || ceilingDisc ? 3 : 2;
-        const minScore = animal || ceilingDisc ? 0.90 : 0.85;
+        // Confirm ordinary objects faster so Pangala names phones, cups, chairs, etc.
+        const need = animal || ceilingDisc ? 2 : 1;
+        const minScore = animal || ceilingDisc ? 0.78 : 0.50;
         return (t.hits || 0) >= need || (!animal && !ceilingDisc && (t.score || 0) >= minScore);
       }).map(function (t) {
         return {
@@ -1650,7 +2275,7 @@
         };
       });
       a.faces = faceTracks.filter(function (t) {
-        return t.source === 'api' && (t.hits || 0) >= 1;
+        return (t.source === 'api' || t.source === 'skin' || t.source === 'person-head') && (t.hits || 0) >= 1;
       }).map(function (t) {
         return {
           x: t.x, y: t.y, w: t.w, h: t.h,
@@ -1800,14 +2425,14 @@
     }
 
     function minScoreFor(cls, area) {
-      let min = cls === 'person' ? 0.52 : 0.64;
-      if (isDeviceClass(cls)) min = 0.62;
-      if (isAnimalClass(cls)) min = EASY_FALSE_ANIMALS.indexOf(cls) >= 0 ? 0.86 : 0.80;
-      if (isCeilingDiscClass(cls)) min = 0.90;
-      if (confuseGroup(cls) >= 0 && cls !== 'person' && !isAnimalClass(cls) && !isCeilingDiscClass(cls)) min = Math.max(min, 0.72);
-      if (area < 0.01) min += isAnimalClass(cls) || isCeilingDiscClass(cls) ? 0.06 : 0.1;
-      if (area < 0.004) min += 0.08;
-      return Math.min(0.94, min);
+      let min = cls === 'person' ? 0.40 : 0.48;
+      if (isDeviceClass(cls)) min = 0.45;
+      if (isAnimalClass(cls)) min = EASY_FALSE_ANIMALS.indexOf(cls) >= 0 ? 0.72 : 0.62;
+      if (isCeilingDiscClass(cls)) min = 0.82;
+      if (confuseGroup(cls) >= 0 && cls !== 'person' && !isAnimalClass(cls) && !isCeilingDiscClass(cls)) min = Math.max(min, 0.55);
+      if (area < 0.01) min += isAnimalClass(cls) || isCeilingDiscClass(cls) ? 0.04 : 0.05;
+      if (area < 0.004) min += 0.04;
+      return Math.min(0.90, min);
     }
 
     function looksLikeClass(p, img, w, h, people) {
@@ -1931,10 +2556,10 @@
         })[0];
         const secondN = second ? c.votes[second].n : 0;
         if (animal && second && (second === 'person' || second === 'chair' || second === 'couch' || second === 'teddy bear') && rec.n < secondN + 2) return;
-        if (animal && (c.hits < 3 || topN / total < 0.8 || avg < minScoreFor(top, area))) return;
-        if (ceilingDisc && (c.hits < 3 || topN / total < 0.85 || avg < minScoreFor(top, area))) return;
-        const sureFirst = !animal && !ceilingDisc && c.hits === 1 && avg >= 0.88 && confuseGroup(top) < 0;
-        if (!sureFirst && !animal && !ceilingDisc && (c.hits < 2 || topN / total < 0.67 || avg < minScoreFor(top, area))) return;
+        if (animal && (c.hits < 2 || topN / total < 0.7 || avg < minScoreFor(top, area))) return;
+        if (ceilingDisc && (c.hits < 2 || topN / total < 0.75 || avg < minScoreFor(top, area))) return;
+        const sureFirst = !animal && !ceilingDisc && c.hits === 1 && avg >= 0.58;
+        if (!sureFirst && !animal && !ceilingDisc && (c.hits < 2 || topN / total < 0.55 || avg < minScoreFor(top, area))) return;
         out.push({ class: top, score: avg, bbox: [c.x, c.y, c.w, c.h], fromTile: !!c.fromTile });
       });
       return out;
@@ -2072,7 +2697,7 @@
         out.push(Object.assign({}, o));
       });
       out.sort(function (a, b) { return (b.score || 0) - (a.score || 0) || b.areaPct - a.areaPct; });
-      return out.slice(0, 8);
+      return out.slice(0, 14);
     }
 
     function sigFromRect(srcCanvas, x, y, rw, rh) {
@@ -2465,10 +3090,15 @@
         objects = sim.objects;
       } else {
         const native = (nativeFaces && nativeFaces.length ? nativeFaces : lastNativeFaces) || [];
-        const boxes = pickPrimaryFaces(native.slice(), w, h);
+        const skinBoxes = findSkinFaces(img, w, h);
+        const boxes = pickPrimaryFaces(native.concat(skinBoxes), w, h);
         const used = {};
         faces = boxes.map((b, i) => describeFace(img, w, h, b, srcCanvas, i, used));
         objects = mergeNamedObjects(faces);
+        // Keep COCO non-person objects even when face list is empty.
+        if (!objects.length && lastCocoObjects && lastCocoObjects.length) {
+          objects = mergeNamedObjects([]);
+        }
       }
       const place = liveReady ? placeFromConfirmed(objects, faces) : (cam && cam.zone ? cam.zone : '');
       const sceneSpeech = liveReady
@@ -2497,11 +3127,12 @@
       ].join('\n');
       const spokenFaces = faceReport.replace(/\n+/g, ' ');
       const spoken = spokenFaces;
-      return {
+      const result = {
         lighting, place, people, fire, move, faceMatch, faces, objects, faceReport, objectReport, clothesReport, itemsReport, zoneLines,
         sceneSpeech, description, spoken, spokenFaces,
         short: people + (place ? ' · ' + place : '') + (faceMatch ? ' · ' + faceMatch.faceId : '')
       };
+      return rebuildLocalizedFields(result, liveReady, cam);
     }
 
     function setLiveSceneBox(text) {
@@ -2656,14 +3287,20 @@
       faceDetectBusy = true;
       const work = analyseWork;
       detectBrowserFaces(work).then(function (hits) {
-        lastNativeFaces = hits || [];
-        if (liveDeviceOnFeed && activeFeed && lastNativeFaces.length && !analyseBusy) {
+        if (hits && hits.length) {
+          lastNativeFaces = hits;
+          lastNativeFacesAt = performance.now();
+        } else if (performance.now() - lastNativeFacesAt > 1800) {
+          // Only clear after a real gap so one blank FaceDetector frame does not deny faces.
+          lastNativeFaces = [];
+        }
+        if (liveDeviceOnFeed && activeFeed && !analyseBusy) {
           grabAnalyseFrame();
           const a = analyseEnvironment(analyseWork, lastNativeFaces);
           applySceneResult(a);
         }
       }).catch(function () {
-        lastNativeFaces = [];
+        if (performance.now() - lastNativeFacesAt > 1800) lastNativeFaces = [];
       }).then(function () {
         faceDetectBusy = false;
       });
@@ -2922,10 +3559,458 @@
         </div>`).join('');
     }
 
+    function nowClock() {
+      return new Date().toTimeString().slice(0, 5);
+    }
+
+    function farmerById(id) {
+      return farmers.find(f => f.id === id);
+    }
+
+    function parkAt(lat, lng) {
+      return PARKS.find(p => lat >= p.latMin && lat <= p.latMax && lng >= p.lngMin && lng <= p.lngMax) || null;
+    }
+
+    function bufferPark(lat, lng) {
+      return PARKS.find(p =>
+        lat >= p.latMin - BUFFER_LAT && lat <= p.latMax + BUFFER_LAT &&
+        lng >= p.lngMin - BUFFER_LNG && lng <= p.lngMax + BUFFER_LNG
+      ) || null;
+    }
+
+    function zoneOf(lat, lng) {
+      const inside = parkAt(lat, lng);
+      if (inside) return { kind: 'park', park: inside };
+      const near = bufferPark(lat, lng);
+      if (near) return { kind: 'buffer', park: near };
+      return { kind: 'communal', park: null };
+    }
+
+    function purposeHtml(purpose) {
+      if (purpose === 'farmer') return '<span class="ws-purpose ws-purpose-farm">FARMER</span>';
+      if (purpose === 'conservation') return '<span class="ws-purpose ws-purpose-park">PARK</span>';
+      return '<span class="ws-purpose ws-purpose-both">BOTH</span>';
+    }
+
+    function gpsUnitCount() {
+      return cameras.length + rangers.length + herds.length;
+    }
+
+    function herdsNearParks() {
+      return herds.filter(h => h.zone === 'buffer' || h.zone === 'park');
+    }
+
+    function sensorsOnline() {
+      return sensors.filter(s => s.online).length;
+    }
+
+    function sensorTone(s) {
+      if (s.kind === 'weather') return 'ok';
+      if (s.kind === 'kraal' || s.kind === 'crop') {
+        const warn = s.warnAt != null ? s.warnAt : 1;
+        if (s.value >= warn * 1.4) return 'crit';
+        if (s.value >= warn) return 'warn';
+        return 'ok';
+      }
+      if (s.okMin == null) return 'ok';
+      if (s.value < s.okMin * 0.6) return 'crit';
+      if (s.value < s.okMin) return 'warn';
+      return 'ok';
+    }
+
+    function sensorBar(s) {
+      const max = s.max || (s.kind === 'fence' ? 10 : 100);
+      const pct = Math.max(0, Math.min(100, (s.value / max) * 100));
+      const tone = sensorTone(s);
+      return '<div class="ws-meter ' + (tone === 'ok' ? '' : tone) + '"><span style="width:' + pct + '%"></span></div>';
+    }
+
+    function raiseAgAlert(spec) {
+      const existing = agAlerts.find(a => a.key === spec.key && a.status === 'ACTIVE');
+      if (existing) {
+        existing.lat = spec.lat;
+        existing.lng = spec.lng;
+        existing.detail = spec.detail;
+        return existing;
+      }
+      const item = {
+        id: 'AG-' + String(agSeq++).padStart(3, '0'),
+        status: 'ACTIVE',
+        when: nowClock(),
+        ...spec
+      };
+      agAlerts.unshift(item);
+      incidents.unshift({
+        id: item.id,
+        status: 'ACTIVE',
+        type: spec.incidentType || spec.title,
+        detail: spec.detail,
+        loc: spec.location,
+        when: 'Tonight ' + item.when
+      });
+      if (spec.notifyFarmer && spec.farmerId) notifyFarmer(spec.farmerId, spec.sms || spec.title, true);
+      toast(spec.title, spec.severity === 'critical');
+      renderAlerts();
+      renderIncidents();
+      renderAg();
+      return item;
+    }
+
+    function clearAgAlert(key) {
+      const item = agAlerts.find(a => a.key === key && a.status === 'ACTIVE');
+      if (!item) return;
+      item.status = 'CLEARED';
+      const inc = incidents.find(i => i.id === item.id);
+      if (inc) inc.status = 'RESOLVED';
+    }
+
+    function evaluateHerdZone(h) {
+      const z = zoneOf(h.lat, h.lng);
+      const prev = h.zone;
+      h.zone = z.kind;
+      h.parkName = z.park ? z.park.name : '';
+      const farmer = farmerById(h.farmerId);
+      if (z.kind === 'park' && prev !== 'park') {
+        raiseAgAlert({
+          key: 'park:' + h.id,
+          type: 'livestock',
+          severity: 'critical',
+          purpose: 'both',
+          title: h.name + ' inside ' + z.park.name,
+          location: z.park.name + ' · collar ' + h.collar,
+          detail: 'Conservation: livestock inside a reserve — overgrazing, disease risk to wildlife, snare exposure. Farmer: ' + farmer.name + ' must retrieve ' + h.head + ' ' + h.species + ' before impoundment.',
+          parkExplain: 'Ranger unit to turn the herd at the fence and check for cuts or snares.',
+          farmExplain: 'SMS the owner. Cattle inside the park can be impounded and may pick up or spread disease.',
+          lat: h.lat, lng: h.lng, herdId: h.id, farmerId: h.farmerId, cameraId: 'CAM-006',
+          incidentType: 'Livestock in park',
+          notifyFarmer: true,
+          sms: h.name + ' GPS shows inside ' + z.park.name + '. Turn the herd now. Collar ' + h.collar + '.'
+        });
+      } else if (z.kind === 'buffer' && prev === 'communal') {
+        raiseAgAlert({
+          key: 'buffer:' + h.id,
+          type: 'livestock',
+          severity: 'high',
+          purpose: 'both',
+          title: h.name + ' in the ' + z.park.name + ' buffer',
+          location: z.park.name + ' buffer · collar ' + h.collar,
+          detail: 'Herd is grazing the park edge. Conservation watch for fence pressure. Farmer should turn animals before they cross.',
+          parkExplain: 'Watch the nearest fence camera. Do not treat this as poaching unless people appear with tools.',
+          farmExplain: 'Turn the herd toward the kraal. Buffer grazing often precedes a park crossing.',
+          lat: h.lat, lng: h.lng, herdId: h.id, farmerId: h.farmerId,
+          incidentType: 'Livestock in buffer',
+          notifyFarmer: true,
+          sms: h.name + ' is on the ' + z.park.name + ' buffer. Turn them before they cross the fence.'
+        });
+      }
+      if (z.kind !== 'park') clearAgAlert('park:' + h.id);
+      if (z.kind === 'communal') clearAgAlert('buffer:' + h.id);
+    }
+
+    function wanderLivestock() {
+      herds.forEach(h => {
+        if (h.drive === 'home') {
+          const dlat = h.homeLat - h.lat;
+          const dlng = h.homeLng - h.lng;
+          h.lat += dlat * 0.18;
+          h.lng += dlng * 0.18;
+          if (Math.abs(dlat) < 0.004 && Math.abs(dlng) < 0.004) h.drive = null;
+        } else if (h.drive === 'park') {
+          const target = PARKS[0];
+          const tlat = (target.latMin + target.latMax) / 2;
+          const tlng = (target.lngMin + target.lngMax) / 2;
+          h.lat += (tlat - h.lat) * 0.12;
+          h.lng += (tlng - h.lng) * 0.12;
+        } else {
+          h.heading += (Math.random() - 0.5) * 0.5;
+          h.lat += Math.cos(h.heading) * 0.00028;
+          h.lng += Math.sin(h.heading) * 0.00028;
+        }
+        h.lat = Math.min(BOUNDS.latMax - 0.01, Math.max(BOUNDS.latMin + 0.01, h.lat));
+        h.lng = Math.min(BOUNDS.lngMax - 0.01, Math.max(BOUNDS.lngMin + 0.01, h.lng));
+        h.rssi = -80 - Math.round(Math.random() * 18);
+        evaluateHerdZone(h);
+      });
+    }
+
+    function tickSensors() {
+      sensors.forEach(s => {
+        if (s.kind === 'weather') {
+          s.value = Math.round((s.value + (Math.random() - 0.5) * 0.4) * 10) / 10;
+          s.wind = Math.max(4, Math.round((s.wind + (Math.random() - 0.5) * 2) * 10) / 10);
+          return;
+        }
+        if (s.forced) return;
+        const jitter = (Math.random() - 0.5) * (s.kind === 'crop' || s.kind === 'kraal' ? 0.08 : 0.35);
+        s.value = Math.max(0, s.value + jitter);
+        if (s.kind === 'fence' && s.value < s.okMin) {
+          raiseAgAlert({
+            key: 'sensor:' + s.id,
+            type: 'fence',
+            severity: 'critical',
+            purpose: s.purpose === 'farmer' ? 'farmer' : 'both',
+            title: 'Fence voltage drop · ' + s.name,
+            location: s.loc + ' · ' + s.id,
+            detail: 'Energiser at ' + s.value.toFixed(1) + ' kV. Conservation: treat as a possible cut for poacher entry. Farmer: livestock can walk the gap into the park or onto the road.',
+            parkExplain: 'Patrol the cut. Match with CAM-006 if this is the east fence.',
+            farmExplain: 'Check the kraal or boundary wire. Cattle may already be through.',
+            lat: s.lat, lng: s.lng, sensorId: s.id, farmerId: s.id === 'IOT-F02' ? 'F-01' : 'F-01', cameraId: s.id === 'IOT-F01' ? 'CAM-006' : null,
+            incidentType: 'Fence IoT fault',
+            notifyFarmer: true,
+            sms: 'Fence voltage low at ' + s.name + ' (' + s.value.toFixed(1) + ' kV). Check the wire now.'
+          });
+        } else if (s.kind === 'fence' && s.value >= s.okMin) {
+          clearAgAlert('sensor:' + s.id);
+        }
+        if ((s.kind === 'soil' || s.kind === 'water') && s.value < s.okMin) {
+          raiseAgAlert({
+            key: 'sensor:' + s.id,
+            type: s.kind === 'soil' ? 'crop' : 'livestock',
+            severity: 'high',
+            purpose: s.purpose,
+            title: (s.kind === 'soil' ? 'Soil moisture stress · ' : 'Water trough low · ') + s.name,
+            location: s.loc + ' · ' + s.id,
+            detail: s.kind === 'soil'
+              ? 'Plot moisture is ' + s.value.toFixed(0) + '%. Farmer irrigation / mulch needed. Dry maize also draws elephant from Bally Vaughan.'
+              : 'Trough at ' + s.value.toFixed(0) + '%. Cattle will push toward the Nyagui pan inside the park buffer.',
+            parkExplain: s.kind === 'water' ? 'Expect more livestock pressure on the shared pan and east fence.' : 'Dry fields raise crop-raid risk on the Bally Vaughan buffer.',
+            farmExplain: s.kind === 'soil' ? 'Irrigate or harvest early. Watch the geophone tonight.' : 'Refill the trough before dark so the herd stays at the kraal.',
+            lat: s.lat, lng: s.lng, sensorId: s.id, farmerId: s.id === 'IOT-S01' ? 'F-02' : 'F-01',
+            incidentType: s.kind === 'soil' ? 'Drought stress' : 'Water stress',
+            notifyFarmer: true,
+            sms: s.name + ' is low (' + s.value.toFixed(0) + s.unit + '). Act before the herd walks the park fence.'
+          });
+        } else if ((s.kind === 'soil' || s.kind === 'water') && s.value >= s.okMin) {
+          clearAgAlert('sensor:' + s.id);
+        }
+      });
+    }
+
+    function notifyFarmer(farmerId, msg, skipToast) {
+      const f = farmerById(farmerId);
+      if (!f) return;
+      lastSmsAt = nowClock();
+      farmerInbox.unshift({ at: lastSmsAt, farmer: f.name, phone: f.phone, msg: msg });
+      if (farmerInbox.length > 12) farmerInbox.pop();
+      const sys = document.getElementById('sysSms');
+      if (sys) sys.textContent = lastSmsAt;
+      if (!skipToast) toast('Farmer SMS → ' + f.name + ' · ' + f.phone);
+      renderFarmerInbox();
+    }
+
+    function dispatchAg(alertId) {
+      const a = agAlerts.find(x => x.id === alertId);
+      if (!a) return;
+      const pin = fmtGps(a.lat, a.lng);
+      toast('Ranger unit tasked to ' + a.title + ' · ' + pin);
+      if (a.farmerId) notifyFarmer(a.farmerId, 'Rangers moving to ' + a.location + '. Stay with the herd; do not approach predators or elephant.');
+    }
+
+    function simAg(kind) {
+      if (kind === 'incursion') {
+        const h = herds.find(x => x.id === 'H-311') || herds[0];
+        h.drive = 'park';
+        toast('Driving ' + h.name + ' toward Umfurudzi on the collar track.');
+        return;
+      }
+      if (kind === 'recall') {
+        herds.forEach(h => { h.drive = 'home'; });
+        agAlerts.forEach(a => {
+          if (a.type === 'livestock' && a.status === 'ACTIVE') {
+            a.status = 'CLEARED';
+            const inc = incidents.find(i => i.id === a.id);
+            if (inc) inc.status = 'RESOLVED';
+          }
+        });
+        toast('Herd owners recalled. Collars turning back to kraals.');
+        renderAg();
+        renderAlerts();
+        renderIncidents();
+        return;
+      }
+      if (kind === 'predator') {
+        const s = sensors.find(x => x.id === 'IOT-K01');
+        s.value = 9.2;
+        s.forced = true;
+        setTimeout(() => { s.forced = false; s.value = 0.2; clearAgAlert('sensor:' + s.id); renderAg(); }, 28000);
+        raiseAgAlert({
+          key: 'sensor:' + s.id,
+          type: 'predator',
+          severity: 'critical',
+          purpose: 'both',
+          title: 'Predator at Madziwa kraal',
+          location: s.loc + ' · ' + s.id,
+          detail: 'PIR / magnet hits on the night kraal. Farmer protection: lion or hyena at the cattle. Conservation: a retaliatory killing here loses a predator the park needs.',
+          parkExplain: 'Send a conflict ranger, not a shoot-on-sight response. Lights and noise first.',
+          farmExplain: 'Keep people and dogs inside. Do not spear. Rangers are coming to haze the animal off.',
+          lat: s.lat, lng: s.lng, sensorId: s.id, farmerId: 'F-01',
+          incidentType: 'Predator at kraal',
+          notifyFarmer: true,
+          sms: 'ALERT: predator movement at Madziwa kraal. Stay inside. Rangers notified. Do not kill the animal.'
+        });
+        return;
+      }
+      if (kind === 'crop') {
+        const s = sensors.find(x => x.id === 'IOT-C01');
+        s.value = 1.6;
+        s.forced = true;
+        setTimeout(() => { s.forced = false; s.value = 0.1; clearAgAlert('sensor:' + s.id); renderAg(); }, 28000);
+        raiseAgAlert({
+          key: 'sensor:' + s.id,
+          type: 'crop',
+          severity: 'high',
+          purpose: 'both',
+          title: 'Elephant crop raid · Glendale maize',
+          location: s.loc + ' · ' + s.id,
+          detail: 'Geophone spike on the Bally Vaughan buffer. Farmer: maize being browsed. Conservation: keep people off the animals; haze from vehicles, not guns.',
+          parkExplain: 'Bally Vaughan unit to haze elephant back toward the pan. Do not treat farmers in the field as poachers.',
+          farmExplain: 'Stay at the field edge. Flash and shout. Rangers will push the herd off the stand.',
+          lat: s.lat, lng: s.lng, sensorId: s.id, farmerId: 'F-02', cameraId: 'CAM-005',
+          incidentType: 'Crop raid',
+          notifyFarmer: true,
+          sms: 'Elephant on the Glendale maize (geophone). Stay back. Rangers haze from the Bally Vaughan road.'
+        });
+        return;
+      }
+      if (kind === 'fence') {
+        const s = sensors.find(x => x.id === 'IOT-F01');
+        s.value = 1.2;
+        s.forced = true;
+        setTimeout(() => { s.forced = false; s.value = 8.1; clearAgAlert('sensor:' + s.id); renderAg(); }, 28000);
+        raiseAgAlert({
+          key: 'sensor:' + s.id,
+          type: 'fence',
+          severity: 'critical',
+          purpose: 'both',
+          title: 'Umfurudzi east fence voltage collapse',
+          location: s.loc + ' · ' + s.id,
+          detail: 'Energiser dropped to ' + s.value.toFixed(1) + ' kV. Dual: poacher entry path AND livestock escape gap. Cross-check CAM-006.',
+          parkExplain: 'Treat as a possible cut. Dispatch to CAM-006 and hold the wire.',
+          farmExplain: 'Nyagui cattle can walk into the park through this gap. Turn H-311 if they are on the buffer.',
+          lat: s.lat, lng: s.lng, sensorId: s.id, farmerId: 'F-01', cameraId: 'CAM-006',
+          incidentType: 'Fence cut / IoT',
+          notifyFarmer: true,
+          sms: 'East game fence is down. Keep cattle off the Umfurudzi boundary. Rangers checking for a cut.'
+        });
+      }
+    }
+
+    function agAlertHtml(a) {
+      const tone = a.severity === 'critical' ? 'critical' : 'high';
+      return `<div class="ws-alert ${tone}">
+        <div class="ws-alert-title">${purposeHtml(a.purpose)}${chipHtml(a.type, a.type.toUpperCase())} ${a.title}</div>
+        <div class="ws-alert-location">${a.location} · ${fmtGps(a.lat, a.lng)} · ${a.when}</div>
+        <div style="margin-top:0.75rem;font-size:13px;">${a.detail}</div>
+        <div class="ws-alert-footer">
+          ${a.cameraId ? '<button class="ws-btn-small" data-alert-feed="' + a.cameraId + '">Open nearest camera</button>' : ''}
+          <button class="ws-btn-small" data-ag-dispatch="${a.id}">Dispatch rangers</button>
+          ${a.farmerId ? '<button class="ws-btn-small" data-ag-sms="' + a.id + '">SMS farmer again</button>' : ''}
+          <button class="ws-btn-small" data-tab-jump="smartag">Open Smart Ag</button>
+        </div>
+      </div>`;
+    }
+
+    function renderAgStats() {
+      const sl = document.getElementById('statLivestock');
+      if (sl) sl.textContent = String(herdsNearParks().length);
+      const si = document.getElementById('statIot');
+      if (si) si.textContent = sensorsOnline() + '/' + sensors.length;
+      const sg = document.getElementById('statGps');
+      if (sg) sg.textContent = String(gpsUnitCount());
+      const sc = document.getElementById('sysCollars');
+      if (sc) sc.textContent = herds.length + ' locked';
+      const sn = document.getElementById('sysNodes');
+      if (sn) sn.textContent = sensorsOnline() + '/' + sensors.length;
+    }
+
+    function renderHerds() {
+      const el = document.getElementById('herdList');
+      if (!el) return;
+      el.innerHTML = herds.map(h => {
+        const f = farmerById(h.farmerId);
+        const zoneLabel = h.zone === 'park' ? 'INSIDE PARK' : h.zone === 'buffer' ? 'BUFFER' : 'COMMUNAL';
+        const badge = h.zone === 'park' ? 'ws-unreg ws-badge' : h.zone === 'buffer' ? 'ws-badge-warn' : 'ws-badge';
+        return `<div class="ws-camera-item">
+          <div style="display:flex;justify-content:space-between;gap:0.75rem;align-items:flex-start;">
+            <div>
+              <div style="font-weight:600;">${h.name} · ${h.id}</div>
+              <div style="font-size:13px;color:var(--text-secondary);margin-top:0.25rem;">${h.head} ${h.species} · collar ${h.collar} · ${f ? f.name : ''} (${f ? f.village : ''})</div>
+              <div style="font-size:12px;color:var(--text-secondary);margin-top:0.35rem;">GPS ${fmtGps(h.lat, h.lng)} · LoRa ${h.rssi} dBm${h.parkName ? ' · ' + h.parkName : ''}</div>
+            </div>
+            <div class="${badge}">${zoneLabel}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderSensors() {
+      const el = document.getElementById('sensorList');
+      if (!el) return;
+      el.innerHTML = sensors.map(s => {
+        const extra = s.kind === 'weather' ? (' · wind ' + s.wind + ' km/h') : '';
+        return `<div class="ws-system-row">
+          <span><strong>${s.id}</strong> ${s.name}<br><span style="font-size:12px;color:var(--text-secondary);">${purposeHtml(s.purpose)}${s.loc}</span>${sensorBar(s)}</span>
+          <span style="font-size:13px;font-variant-numeric:tabular-nums;">${s.online ? s.value.toFixed(s.kind === 'crop' || s.kind === 'fence' ? 1 : 0) + ' ' + s.unit : 'offline'}${extra}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function renderAgQueues() {
+      const park = document.getElementById('agParkQueue');
+      const farm = document.getElementById('agFarmQueue');
+      if (!park || !farm) return;
+      const active = agAlerts.filter(a => a.status === 'ACTIVE');
+      const parkItems = active.filter(a => a.purpose === 'both' || a.purpose === 'conservation');
+      const farmItems = active.filter(a => a.purpose === 'both' || a.purpose === 'farmer');
+      park.innerHTML = parkItems.length ? parkItems.map(a => `<div class="ws-alert ${a.severity==='critical'?'critical':'high'}"><div class="ws-alert-title">${a.title}</div><div class="ws-alert-location">${a.parkExplain || a.detail}</div></div>`).join('') : '<p style="font-size:13px;color:var(--text-secondary);">No park-side agriculture alerts. Livestock are on communal land.</p>';
+      farm.innerHTML = farmItems.length ? farmItems.map(a => `<div class="ws-alert ${a.severity==='critical'?'critical':'high'}"><div class="ws-alert-title">${a.title}</div><div class="ws-alert-location">${a.farmExplain || a.detail}</div><div class="ws-alert-footer"><button class="ws-btn-small" data-ag-sms="${a.id}">SMS farmer</button></div></div>`).join('') : '<p style="font-size:13px;color:var(--text-secondary);">No farmer-protection alerts. Troughs, fences and kraals are quiet.</p>';
+    }
+
+    function renderFarmers() {
+      const el = document.getElementById('farmerList');
+      if (!el) return;
+      el.innerHTML = farmers.map(f => {
+        const owned = herds.filter(h => h.farmerId === f.id);
+        return `<div class="ws-staff-item">
+          <div class="ws-staff-info">
+            <div class="ws-staff-name">${f.name}</div>
+            <div class="ws-staff-role">${f.village} · ${f.ward} · ${f.id}</div>
+            <div class="ws-staff-role">${f.phone} · ${owned.length} collared herd${owned.length===1?'':'s'}</div>
+          </div>
+          <div class="ws-badge">Communal farmer</div>
+        </div>`;
+      }).join('');
+    }
+
+    function renderFarmerInbox() {
+      const el = document.getElementById('farmerInbox');
+      if (!el) return;
+      el.innerHTML = farmerInbox.length ? farmerInbox.map(m => `<div class="ws-system-row"><span><strong>${m.at}</strong> → ${m.farmer}<br><span style="font-size:12px;color:var(--text-secondary);">${m.msg}</span></span><span style="font-size:11px;color:var(--text-secondary);">${m.phone}</span></div>`).join('') : '<p style="font-size:13px;color:var(--text-secondary);">No farmer SMS yet. Buffer crossings, fence faults and kraal PIR will send automatically.</p>';
+    }
+
+    function renderAg() {
+      renderHerds();
+      renderSensors();
+      renderAgQueues();
+      renderFarmers();
+      renderFarmerInbox();
+      renderAgStats();
+    }
+
+    function tickAg() {
+      wanderLivestock();
+      tickSensors();
+      renderAgStats();
+      const agTab = document.getElementById('smartag');
+      if (agTab && !agTab.classList.contains('ws-hidden')) renderAg();
+    }
+
     function renderGpsTable() {
       const rows = [
         ...cameras.map(c => ({ kind: 'Camera', id: c.id, name: c.name, lat: c.lat, lng: c.lng, extra: c.powered ? 'beacon on' : 'beacon idle' })),
-        ...rangers.map(r => ({ kind: 'Ranger', id: r.id, name: r.name, lat: r.lat, lng: r.lng, extra: r.hq ? 'HQ' : 'moving' }))
+        ...rangers.map(r => ({ kind: 'Ranger', id: r.id, name: r.name, lat: r.lat, lng: r.lng, extra: r.hq ? 'HQ' : 'moving' })),
+        ...herds.map(h => ({ kind: 'Livestock', id: h.collar, name: h.name, lat: h.lat, lng: h.lng, extra: h.zone + (h.parkName ? ' · ' + h.parkName : '') })),
+        ...sensors.map(s => ({ kind: 'IoT', id: s.id, name: s.name, lat: s.lat, lng: s.lng, extra: s.kind + ' · ' + (s.online ? s.value.toFixed(s.kind === 'crop' || s.kind === 'fence' ? 1 : 0) + ' ' + s.unit : 'offline') }))
       ];
       document.getElementById('gpsTable').innerHTML = rows.map(r => `
         <div class="ws-system-row">
@@ -2940,6 +4025,24 @@
       const bg = document.createElementNS(ns, 'rect');
       bg.setAttribute('width', w); bg.setAttribute('height', h); bg.setAttribute('fill', '#0d1a14');
       svg.appendChild(bg);
+      PARKS.forEach(p => {
+        const a = project(p.latMax, p.lngMin, w, h);
+        const b = project(p.latMin, p.lngMax, w, h);
+        const ba = project(p.latMax + BUFFER_LAT, p.lngMin - BUFFER_LNG, w, h);
+        const bb = project(p.latMin - BUFFER_LAT, p.lngMax + BUFFER_LNG, w, h);
+        const buf = document.createElementNS(ns, 'rect');
+        buf.setAttribute('x', ba.x); buf.setAttribute('y', ba.y);
+        buf.setAttribute('width', Math.max(1, bb.x - ba.x)); buf.setAttribute('height', Math.max(1, bb.y - ba.y));
+        buf.setAttribute('fill', 'none'); buf.setAttribute('stroke', '#fbbf24'); buf.setAttribute('stroke-width', '0.25');
+        buf.setAttribute('stroke-dasharray', '0.8 0.7'); buf.setAttribute('opacity', '0.7');
+        svg.appendChild(buf);
+        const rect = document.createElementNS(ns, 'rect');
+        rect.setAttribute('x', a.x); rect.setAttribute('y', a.y);
+        rect.setAttribute('width', Math.max(1, b.x - a.x)); rect.setAttribute('height', Math.max(1, b.y - a.y));
+        rect.setAttribute('fill', '#1a4a32'); rect.setAttribute('fill-opacity', '0.4');
+        rect.setAttribute('stroke', '#3dd68c'); rect.setAttribute('stroke-width', '0.35');
+        svg.appendChild(rect);
+      });
       for (let i = 0; i < 18; i++) {
         const c = document.createElementNS(ns, 'circle');
         const p = { x: 8 + Math.random() * (w - 16), y: 6 + Math.random() * (h - 12) };
@@ -2969,6 +4072,31 @@
         circ.setAttribute('cx', p.x); circ.setAttribute('cy', p.y); circ.setAttribute('r', 1.5);
         circ.setAttribute('fill', '#60a5fa');
         svg.appendChild(circ);
+      });
+      herds.forEach(h => {
+        const p = project(h.lat, h.lng, w, h);
+        const g = document.createElementNS(ns, 'g');
+        g.setAttribute('class', 'ws-map-pin');
+        const color = h.zone === 'park' ? '#ff5a5a' : h.zone === 'buffer' ? '#fbbf24' : '#f5d024';
+        const diamond = document.createElementNS(ns, 'polygon');
+        diamond.setAttribute('points', (p.x) + ',' + (p.y - 1.7) + ' ' + (p.x + 1.5) + ',' + p.y + ' ' + p.x + ',' + (p.y + 1.7) + ' ' + (p.x - 1.5) + ',' + p.y);
+        diamond.setAttribute('fill', color);
+        diamond.setAttribute('stroke', '#04140c');
+        diamond.setAttribute('stroke-width', '0.25');
+        g.appendChild(diamond);
+        g.addEventListener('click', () => switchTab('smartag'));
+        svg.appendChild(g);
+      });
+      sensors.forEach(s => {
+        const p = project(s.lat, s.lng, w, h);
+        const g = document.createElementNS(ns, 'g');
+        g.setAttribute('class', 'ws-map-pin');
+        const sq = document.createElementNS(ns, 'rect');
+        sq.setAttribute('x', p.x - 1); sq.setAttribute('y', p.y - 1); sq.setAttribute('width', 2); sq.setAttribute('height', 2);
+        sq.setAttribute('fill', sensorTone(s) === 'ok' ? '#c084fc' : sensorTone(s) === 'warn' ? '#f5a524' : '#ff5a5a');
+        g.appendChild(sq);
+        g.addEventListener('click', () => switchTab('smartag'));
+        svg.appendChild(g);
       });
     }
 
@@ -3152,49 +4280,54 @@
     }
 
     function buildSceneParts(a, cam) {
+      const W = L();
       const faces = ((a && a.faces) || []).slice().sort(function (x, y) { return (x.x || 0) - (y.x || 0); });
       const objects = ((a && a.objects) || []).filter(function (o) { return o.name && o.name !== 'scene'; });
       const parts = [];
-      parts.push('I will describe everything currently detected, one item after the other.');
+      parts.push(W.willDescribe);
       if (a && a.sceneSpeech) {
         parts.push(a.sceneSpeech);
       } else if (cam && cam.detection) {
-        parts.push(cam.detection.explain);
+        parts.push(replyLang === 'en' ? cam.detection.explain : localizePhrase(cam.detection.explain));
       }
       const nF = faces.length, nO = objects.length;
       if (!nF && !nO) {
-        parts.push('I will not name a face or object until it is confirmed. Nothing is confirmed in this frame yet.');
-        parts.push('I am still watching. Ask again as the scene holds still for a moment.');
+        parts.push(W.nothingConfirmed);
+        parts.push(W.stillWatching);
         return parts;
       }
       if (nF) {
-        parts.push('I have ' + nF + ' face' + (nF === 1 ? '' : 's') + '. I will describe them one after the other.');
+        parts.push(W.haveFaces + ' ' + nF + ' ' + (nF === 1 ? W.facesWord : W.facesWordPl) + '. ' + W.willDescribeThem);
         faces.forEach(function (f, i) {
-          parts.push('Face ' + (i + 1) + ' of ' + nF + '. ' + (f.personSpeech || f.line || f.genderLabel || 'A person is in view.'));
+          const line = f.personSpeech || f.line || f.genderLabel || W.personInView;
+          parts.push(W.face + ' ' + (i + 1) + ' ' + W.of + ' ' + nF + '. ' + (replyLang === 'en' ? line : localizePhrase(line)));
         });
       } else {
-        parts.push('No face is locked in this frame.');
+        parts.push(W.noFaceLocked);
       }
       if (nO) {
-        parts.push('I have ' + nO + ' object' + (nO === 1 ? '' : 's') + '. I will describe them one after the other.');
+        parts.push(W.haveObjects + ' ' + nO + ' ' + (nO === 1 ? W.objectsWord : W.objectsWordPl) + '. ' + W.willDescribeThem);
         objects.forEach(function (o, i) {
-          parts.push('Object ' + (i + 1) + ' of ' + nO + '. ' + objectSpeechLine(o));
+          const line = objectSpeechLine(o);
+          parts.push(W.object + ' ' + (i + 1) + ' ' + W.of + ' ' + nO + '. ' + (replyLang === 'en' ? line : localizePhrase(line)));
         });
       } else {
-        parts.push('No extra named object is locked besides the people.');
+        parts.push(W.noExtraObject);
       }
-      parts.push('That is everything confirmed in this frame. I will not add anything that is not in view.');
+      parts.push(W.thatIsEverything);
       return parts;
     }
 
     function buildFaceParts(a) {
+      const W = L();
       const faces = ((a && a.faces) || []).slice().sort(function (x, y) { return (x.x || 0) - (y.x || 0); });
-      if (!faces.length) return ['I see 0 faces. I cannot describe a person in this frame.'];
-      const parts = ['I have ' + faces.length + ' face' + (faces.length === 1 ? '' : 's') + '. I will describe them one after the other.'];
+      if (!faces.length) return [W.see0Faces];
+      const parts = [W.haveFaces + ' ' + faces.length + ' ' + (faces.length === 1 ? W.facesWord : W.facesWordPl) + '. ' + W.willDescribeThem];
       faces.forEach(function (f, i) {
-        parts.push('Face ' + (i + 1) + ' of ' + faces.length + '. ' + (f.personSpeech || f.line || f.genderLabel || 'A person is in view.'));
+        const line = f.personSpeech || f.line || f.genderLabel || W.personInView;
+        parts.push(W.face + ' ' + (i + 1) + ' ' + W.of + ' ' + faces.length + '. ' + (replyLang === 'en' ? line : localizePhrase(line)));
       });
-      parts.push('That is all ' + faces.length + ' face' + (faces.length === 1 ? '' : 's') + '. Ask another question whenever you are ready.');
+      parts.push(W.thatIsAll + ' ' + faces.length + ' ' + (faces.length === 1 ? W.facesWord : W.facesWordPl) + '. ' + W.askAnother);
       return parts;
     }
 
@@ -3214,7 +4347,7 @@
         const u = new SpeechSynthesisUtterance(text);
         u.rate = 1.02;
         u.pitch = 1;
-        u.lang = 'en-GB';
+        u.lang = ttsLang();
         u.onend = function () { lastSpeakIndex += 1; next(); };
         u.onerror = function () { lastSpeakIndex += 1; next(); };
         window.speechSynthesis.speak(u);
@@ -3223,7 +4356,11 @@
     }
 
     function pangalaIntro(cam) {
-      const text = 'I am Pangala. This is Mashonaland Central wildlife surveillance. Authorise an operator, then keep the conversation going. If you ask me to describe the scene, I will name every face and every object, one after the other. I learn from what I see. If you speak while I am talking, I will stop and follow the new command.';
+      const text = replyLang === 'sn'
+        ? 'Ndiri Pangala. Iyi ndiyo system yekutarisa mhuka yeMashonaland Central. Bvumidza mushandi, wobva waramba uchitaura neni. Kana ukati nditsanangure chiitiko, ndichataura chiso nega nega uye chinhu nega nega. Ndinodzidza kubva pane zvandinona. Kana ukataura ndichiri kutaura, ndinomira ndobva ndatevera murairo mutsva.'
+        : (replyLang === 'nd'
+          ? 'NginguPangala. Lolu uhlelo lokugada izilwane eMashonaland Central. Gunyaza umsebenzi, bese uqhubeka ukhuluma nami. Uma ungicela ukuchaza isigcawu, ngizobiza ubuso ngabunye kanye nento ngayinye. Ngifunda kulokho engikubonayo. Uma ukhuluma ngisakhuluma, ngiyayeka bese ngilalela umyalo omusha.'
+          : 'I am Pangala. This is Mashonaland Central wildlife surveillance. Authorise an operator, then keep the conversation going. If you ask me to describe the scene, I will name every face and every object, one after the other. I learn from what I see. If you speak while I am talking, I will stop and follow the new command.');
       chatEl().innerHTML = '';
       appendMsg('ai', text);
       speakPangala(text);
@@ -3245,7 +4382,7 @@
       const wantsPersonItems = !wantsSpectacles && (q === 'personitems' || /bag|holding|carrying|accessory|hat|cap|item with|what (does|do) (he|she|they|the person)/.test(q));
       const wantsFaces = q === 'faces' || (!wantsClothes && !wantsComplexion && !wantsSpectacles && /face|who is|who do you see|people|person|gender|male|female|unknown/.test(q));
       const wantsObjects = !wantsFaces && !wantsClothes && !wantsPersonItems && !wantsAnimals && !wantsDevices && (q === 'objects' || /object|how big|element/.test(q));
-      const wantsScene = q === 'describe' || (!wantsFaces && !wantsGps && !wantsAnimals && !wantsDevices && !wantsComplexion && !wantsSpectacles && /describ|scene|see|happen|what is (on|in)|explain|look|everything/.test(q));
+      const wantsScene = q === 'describe' || (!wantsFaces && !wantsGps && !wantsAnimals && !wantsDevices && !wantsComplexion && !wantsSpectacles && /describ|scene|see|happen|what is (on|in)|explain|look|everything|tsanangura|tsanangudzo|chaza/.test(q));
       const wantsThreat = q === 'threat' || /threat|risk|danger|how bad|severity/.test(q);
       const wantsIntervene = q === 'intervene' || /interven|immediate|dispatch|urgent|need (to )?act|respond|emergency/.test(q);
       const auth = authForCamera(cam.id);
@@ -3378,7 +4515,7 @@
       const u = new SpeechSynthesisUtterance(lastSpoken.replace(/\n+/g, ' ').slice(0, 3200));
       u.rate = 1.04;
       u.pitch = 1;
-      u.lang = 'en-GB';
+      u.lang = ttsLang();
       window.speechSynthesis.speak(u);
     }
 
@@ -3408,7 +4545,7 @@
       if (/bag|holding|carrying|hat|item with/.test(q)) return 'personitems';
       if (/face|who is|who do you see|people|person|gender|male|female|unknown/.test(q)) return 'faces';
       if (/object|what colour|what color|how big|item|element/.test(q)) return 'objects';
-      if (/describ|what do you see|what is (on|in)|analys|analyz|look|scene|everything/.test(q)) return 'describe';
+      if (/describ|what do you see|what is (on|in)|analys|analyz|look|scene|everything|tsanangura|nyatsotsanangura|tsanangudzo|chaza|chaza isigcawu|bukela/.test(q)) return 'describe';
       return null;
     }
 
@@ -3552,15 +4689,22 @@
       }
       appendMsg('user', q);
       runLiveAnalysis();
+      if (lastSceneAnalysis) {
+        rebuildLocalizedFields(lastSceneAnalysis, !!liveDeviceOnFeed, cam);
+        setLiveSceneBox(lastSceneAnalysis.description || '');
+        if (lastSceneAnalysis.faceReport) setLiveFacesBox(lastSceneAnalysis.faceReport);
+      }
       const answer = pangalaReply(cam, intent || q);
       appendMsg('ai', answer);
       if (intent === 'faces') speakQueue(buildFaceParts(lastSceneAnalysis));
       else if (intent === 'objects') {
+        const W = L();
         const objs = ((lastSceneAnalysis && lastSceneAnalysis.objects) || []).filter(function (o) { return o.name && o.name !== 'scene'; });
-        const parts = ['I have ' + objs.length + ' object' + (objs.length === 1 ? '' : 's') + '. I will describe them one after the other.'].concat(objs.map(function (o, i) {
-          return 'Object ' + (i + 1) + ' of ' + objs.length + '. ' + objectSpeechLine(o);
+        const parts = [W.haveObjects + ' ' + objs.length + ' ' + (objs.length === 1 ? W.objectsWord : W.objectsWordPl) + '. ' + W.willDescribeThem].concat(objs.map(function (o, i) {
+          const line = objectSpeechLine(o);
+          return W.object + ' ' + (i + 1) + ' ' + W.of + ' ' + objs.length + '. ' + (replyLang === 'en' ? line : localizePhrase(line));
         }));
-        if (objs.length) parts.push('That is all named objects. The conversation stays open.');
+        if (objs.length) parts.push(W.thatIsEverything);
         speakQueue(parts);
       } else if (intent === 'describe' || intent === 'watch' || /describ|scene|everything|what do you see/.test(q.toLowerCase())) {
         speakQueue(buildSceneParts(lastSceneAnalysis, cam));
@@ -3873,6 +5017,10 @@
       const checkout = e.target.closest('[data-checkout]');
       const yes = e.target.closest('[data-auth-yes]');
       const no = e.target.closest('[data-auth-no]');
+      const simAgBtn = e.target.closest('[data-sim-ag]');
+      const agDisp = e.target.closest('[data-ag-dispatch]');
+      const agSms = e.target.closest('[data-ag-sms]');
+      const jump = e.target.closest('[data-tab-jump]');
       if (power) powerCamera(power.dataset.power);
       if (feed) openFeed(feed.dataset.feed);
       if (alertFeed) openOrPrompt(alertFeed.dataset.alertFeed);
@@ -3881,6 +5029,13 @@
       if (checkout) checkoutTourist(checkout.dataset.checkout);
       if (yes) decideAuth(yes.dataset.authYes, true);
       if (no) decideAuth(no.dataset.authNo, false);
+      if (simAgBtn) simAg(simAgBtn.dataset.simAg);
+      if (agDisp) dispatchAg(agDisp.dataset.agDispatch);
+      if (agSms) {
+        const a = agAlerts.find(x => x.id === agSms.dataset.agSms);
+        if (a && a.farmerId) notifyFarmer(a.farmerId, a.sms || a.title);
+      }
+      if (jump) switchTab(jump.dataset.tabJump);
     });
 
     document.getElementById('closeFeed').onclick = closeFeed;
@@ -3922,6 +5077,29 @@
         voiceSpeakBtn.textContent = 'Speak replies: ' + (voiceSpeakOn ? 'ON' : 'OFF');
         if (!voiceSpeakOn && window.speechSynthesis) window.speechSynthesis.cancel();
         setVoiceStatus(voiceSpeakOn ? 'Pangala will speak answers out loud.' : 'Spoken replies are off. Text still appears in chat.');
+      };
+    }
+    const replyLangSelect = document.getElementById('replyLangSelect');
+    if (replyLangSelect) {
+      replyLangSelect.value = replyLang;
+      replyLangSelect.onchange = function () {
+        replyLang = replyLangSelect.value === 'sn' || replyLangSelect.value === 'nd' ? replyLangSelect.value : 'en';
+        try { localStorage.setItem('pangalaReplyLang', replyLang); localStorage.setItem('pangalaReplyLangUserSet', '1'); } catch (e) {}
+        const cam = cameras.find(function (c) { return c.id === activeFeed; });
+        if (lastSceneAnalysis) {
+          rebuildLocalizedFields(lastSceneAnalysis, !!liveDeviceOnFeed, cam);
+          setLiveSceneBox(lastSceneAnalysis.description);
+          setLiveFacesBox(lastSceneAnalysis.faceReport || '');
+        }
+        const label = replyLang === 'sn' ? 'chiShona' : (replyLang === 'nd' ? 'isiNdebele' : 'English');
+        const describeBtn = document.getElementById('askDescribeBtn');
+        if (describeBtn) {
+          describeBtn.textContent = replyLang === 'sn' ? 'Tsanangura chiitiko' : (replyLang === 'nd' ? 'Chaza isigcawu' : 'Describe the scene');
+        }
+        if (typeof toast === 'function') toast('Scene language: ' + label);
+        if (typeof setVoiceStatus === 'function') setVoiceStatus(replyLang === 'sn'
+          ? 'Tsanangudzo dzechiitiko dzichashandiswa chiShona.'
+          : (replyLang === 'nd' ? 'Ukuchaza kwesigcawu kuzosebenzisa isiNdebele.' : 'Scene descriptions will use English.'));
       };
     }
     document.getElementById('dispatchBtn').onclick = () => { if (activeFeed) dispatch(activeFeed); };
@@ -3969,17 +5147,20 @@
         r.lat = Math.min(BOUNDS.latMax - 0.01, Math.max(BOUNDS.latMin + 0.01, r.lat));
         r.lng = Math.min(BOUNDS.lngMax - 0.01, Math.max(BOUNDS.lngMin + 0.01, r.lng));
       });
+      tickAg();
       if (!document.getElementById('tracking').classList.contains('ws-hidden')) drawMaps();
       if (!document.getElementById('staff').classList.contains('ws-hidden')) renderStaff(document.getElementById('staffSearch').value);
       drawPark(document.getElementById('dashMap'), 100, 60);
     }
 
     function refresh() {
+      herds.forEach(h => evaluateHerdZone(h));
       renderCameras();
       renderAlerts();
       renderStaff(document.getElementById('staffSearch').value);
       renderIncidents();
       renderTourists();
+      renderAg();
       drawMaps();
     }
 

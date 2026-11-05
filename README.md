@@ -1,10 +1,12 @@
 # Wildlife Surveillance
 
-Two browser prototypes for Mashonaland Central site work: a live wildlife camera desk, and a community-governed knowledge archive.
+Two browser prototypes for Mashonaland Central site work: a live wildlife camera desk with smart-agriculture IoT, and a community-governed knowledge archive.
 
 ## Wildlife camera dashboard
 
 Live (and simulated) park cameras, object confirmation, and Pangala scene questions. False-positive filters drop ceiling discs labelled as frisbees, colour-guessed “water”, and animals that do not hold across frames.
+
+The same desk now tracks **communal livestock near the parks** and **LoRa IoT sensors** (fence voltage, soil moisture, troughs, kraal PIR, crop geophones). Alerts are dual-purpose: rangers get the conservation view, registered farmers get an SMS to turn a herd, guard a kraal, or stay off an elephant.
 
 **Run**
 
@@ -17,6 +19,10 @@ py -3 -m http.server 8765
 Then open http://localhost:8765/wildlife-dashboard/
 
 Use **Use device camera** for a real feed. Chrome needs `http://localhost` (not `file://`) for the camera.
+
+**Smart Ag tab**
+
+Open **Smart Ag**. Collars wander on the map (diamonds). IoT nodes are squares. Use **Simulate cattle in Umfurudzi**, **predator at kraal**, **elephant crop raid**, or **fence voltage drop** to see both queues fill: conservation on the left, farmer protection on the right. **Recall herds** turns collars back to kraals.
 
 ## Hearthline knowledge steward
 
